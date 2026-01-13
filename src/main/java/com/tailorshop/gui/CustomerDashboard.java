@@ -28,7 +28,7 @@ public class CustomerDashboard extends JPanel {
         header.setBackground(StyleUtil.CUSTOMER_COLOR);
         header.setPreferredSize(new Dimension(0, 70));
 
-        JLabel title = new JLabel("👤 MENU PELANGGAN", JLabel.LEFT);
+        JLabel title = new JLabel("MENU PELANGGAN", JLabel.LEFT);
         title.setFont(StyleUtil.TITLE_FONT);
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));

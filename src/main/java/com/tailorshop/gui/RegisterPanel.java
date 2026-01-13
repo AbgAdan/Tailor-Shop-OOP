@@ -37,13 +37,13 @@ public class RegisterPanel extends JPanel {
         setBackground(StyleUtil.BG_LIGHT);
 
         // Header
-        JLabel headerLabel = new JLabel("➕ DAFTAR SEBAGAI PELANGGAN", JLabel.CENTER);
+        JLabel headerLabel = new JLabel("DAFTAR SEBAGAI PELANGGAN", JLabel.CENTER);
         headerLabel.setFont(StyleUtil.TITLE_FONT);
         headerLabel.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
         add(headerLabel, BorderLayout.NORTH);
 
         // Nota kecil
-        JLabel note = new JLabel("ℹ️ Hanya akaun pelanggan boleh didaftarkan di sini.", JLabel.CENTER);
+        JLabel note = new JLabel("Hanya akaun pelanggan boleh didaftarkan di sini.", JLabel.CENTER);
         note.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         note.setForeground(Color.GRAY);
         add(note, BorderLayout.NORTH);

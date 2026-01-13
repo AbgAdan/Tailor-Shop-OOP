@@ -35,7 +35,7 @@ public class LoginPanel extends JPanel {
         setBackground(StyleUtil.BG_LIGHT);
 
         // Header
-        JLabel header = new JLabel("🔑 LOG MASUK", JLabel.CENTER);
+        JLabel header = new JLabel("LOG MASUK", JLabel.CENTER);
         header.setFont(StyleUtil.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(40, 0, 30, 0));
         add(header, BorderLayout.NORTH);
