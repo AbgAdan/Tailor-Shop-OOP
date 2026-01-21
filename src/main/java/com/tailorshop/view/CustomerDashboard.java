@@ -1,6 +1,7 @@
+// com.tailorshop.view.CustomerDashboard.java
 package com.tailorshop.view;
 
-import com.tailorshop.main.Main; // ← penting untuk akses mainFrame
+import com.tailorshop.main.Main;
 import com.tailorshop.util.StyleUtil;
 
 import javax.swing.*;
@@ -10,9 +11,15 @@ public class CustomerDashboard extends JPanel {
 
     private static final long serialVersionUID = 1L;
     private final Runnable onLogout;
+    private final String currentUserId;
+    private final String userName;
+    private final String userEmail;
 
-    public CustomerDashboard(Runnable onLogout) {
+    public CustomerDashboard(Runnable onLogout, String userId, String name, String email) {
         this.onLogout = onLogout;
+        this.currentUserId = userId;
+        this.userName = name;
+        this.userEmail = email;
         initializeUI();
     }
 
@@ -46,10 +53,11 @@ public class CustomerDashboard extends JPanel {
             "Urus Ahli Keluarga",
             "Urus Profil Ukuran",
             "Buat Pesanan",
-            "Lihat Pesanan Saya"
+            "Lihat Pesanan Saya",
+            "Profil Saya"
         };
 
-        JPanel menuPanel = new JPanel(new GridLayout(2, 2, 20, 20));
+        JPanel menuPanel = new JPanel(new GridLayout(3, 2, 20, 20));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
         menuPanel.setBackground(getBackground());
 
@@ -63,7 +71,17 @@ public class CustomerDashboard extends JPanel {
                 BorderFactory.createLineBorder(Color.DARK_GRAY, 1),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
-            btn.addActionListener(e -> showFeatureNotReady(item));
+
+            if ("Profil Saya".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new ProfailPanel(currentUserId, "CUSTOMER", userName, userEmail, () -> 
+                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else {
+                btn.addActionListener(e -> showFeatureNotReady(item));
+            }
+
             menuPanel.add(btn);
         }
 
@@ -73,22 +91,10 @@ public class CustomerDashboard extends JPanel {
     private void handleLogout() {
         try {
             if (onLogout != null) {
-                onLogout.run(); // ← ini akan kembali ke MainMenuPanel (ditentukan oleh pemanggil)
-            } else {
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Ralat: Callback logout tidak disediakan.",
-                    "Ralat",
-                    JOptionPane.ERROR_MESSAGE
-                );
+                onLogout.run();
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                this,
-                "Ralat semasa logout: " + ex.getMessage(),
-                "Ralat",
-                JOptionPane.ERROR_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this, "Ralat semasa logout: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
     }
@@ -96,26 +102,17 @@ public class CustomerDashboard extends JPanel {
     private void showFeatureNotReady(String featureName) {
         JOptionPane.showMessageDialog(
             this,
-            "Fungsi \"" + featureName + "\" sedang dalam pembangunan.\n\n" +
-            "Akan tersedia dalam versi akan datang.",
+            "Fungsi \"" + featureName + "\" sedang dalam pembangunan.",
             "Makluman",
             JOptionPane.INFORMATION_MESSAGE
         );
     }
 
-    // Method navigasi selamat — guna Main.mainFrame
     protected void navigateTo(JPanel panel) {
         if (Main.mainFrame != null) {
             Main.mainFrame.setContentPane(panel);
             Main.mainFrame.revalidate();
             Main.mainFrame.repaint();
-        } else {
-            JOptionPane.showMessageDialog(
-                this,
-                "Tetingkap utama tidak dijumpai.",
-                "Ralat Navigasi",
-                JOptionPane.WARNING_MESSAGE
-            );
         }
     }
 }

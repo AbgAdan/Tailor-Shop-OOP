@@ -2,6 +2,7 @@
 package com.tailorshop.view;
 
 import com.tailorshop.controller.AuthController;
+import com.tailorshop.controller.ProfileController;
 import com.tailorshop.main.Main;
 import com.tailorshop.model.User;
 import com.tailorshop.util.StyleUtil;
@@ -74,37 +75,49 @@ public class LoginPanel extends JPanel {
 
         try {
             AuthController authController = new AuthController();
-            User user = authController.login(email, password); // ← mesti pulangkan User lengkap (termasuk id)
+            User user = authController.login(email, password);
 
             if (user != null) {
-                Runnable onLogout = () -> navigateTo(new MainMenuPanel());
-
-                JPanel dashboard;
-                String role = user.getRole().toUpperCase();
-
-                // 🔑 UBAH DI SINI: Hantar ID pengguna ke dashboard
-                switch (role) {
-                    case "CUSTOMER":
-                        dashboard = new CustomerDashboard(onLogout);
-                        break;
-                    case "TAILOR":
-                        dashboard = new TailorDashboard(onLogout);
-                        break;
-                    case "BOSS":
-                        // ✅ HANTAR user.getId() ke BossDashboard
-                        dashboard = new BossDashboard(onLogout, user.getId());
-                        break;
-                    default:
-                        throw new IllegalStateException("Peranan tidak dikenali: " + role);
-                }
-
-                navigateTo(dashboard);
+                openDashboard(user);
             } else {
                 JOptionPane.showMessageDialog(this, "Emel atau kata laluan salah!", "Ralat", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Ralat sistem: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
+        }
+    }
+
+    private void openDashboard(User user) {
+        String userId = user.getId();
+        String role = user.getRole().toUpperCase();
+        Runnable onLogout = () -> navigateTo(new MainMenuPanel());
+
+        ProfileController profileController = new ProfileController();
+        boolean isProfileComplete = profileController.isProfileComplete(userId, role);
+
+        if (!isProfileComplete) {
+            Runnable onProfileComplete = () -> {
+                JPanel dashboard = createDashboard(role, userId, onLogout, user);
+                navigateTo(dashboard);
+            };
+            navigateTo(new CompleteProfilePanel(userId, role, onProfileComplete));
+        } else {
+            JPanel dashboard = createDashboard(role, userId, onLogout, user);
+            navigateTo(dashboard);
+        }
+    }
+
+    private JPanel createDashboard(String role, String userId, Runnable onLogout, User user) {
+        switch (role) {
+            case "CUSTOMER":
+                return new CustomerDashboard(onLogout, userId, user.getName(), user.getEmail());
+            case "TAILOR":
+                return new TailorDashboard(onLogout, userId, user.getName(), user.getEmail());
+            case "BOSS":
+                return new BossDashboard(onLogout, userId);
+            default:
+                throw new IllegalStateException("Peranan tidak dikenali: " + role);
         }
     }
 
