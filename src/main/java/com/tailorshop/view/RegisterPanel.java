@@ -6,7 +6,6 @@ import com.tailorshop.util.StyleUtil;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class RegisterPanel extends JPanel {
 
@@ -27,7 +26,7 @@ public class RegisterPanel extends JPanel {
         JLabel note = new JLabel("Sila isi butiran berikut", JLabel.CENTER);
         note.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         note.setForeground(Color.GRAY);
-        add(note, BorderLayout.PAGE_START); // ← guna PAGE_START supaya tidak overwrite NORTH
+        add(note, BorderLayout.PAGE_START);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(StyleUtil.BG_LIGHT);
@@ -80,9 +79,15 @@ public class RegisterPanel extends JPanel {
             UserController userController = new UserController();
             userController.registerCustomer(name, email, password);
 
-            JOptionPane.showMessageDialog(this, "Pendaftaran berjaya!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
-            Runnable onLogout = () -> navigateTo(new MainMenuPanel());
-            navigateTo(new CustomerDashboard(onLogout));
+            JOptionPane.showMessageDialog(
+                this,
+                "Pendaftaran berjaya!\nSila log masuk untuk meneruskan.",
+                "Berjaya",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+
+            // ✅ PERUBAHAN DI SINI: Terus ke MainMenuPanel
+            navigateTo(new MainMenuPanel());
 
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Input Tidak Sah", JOptionPane.WARNING_MESSAGE);

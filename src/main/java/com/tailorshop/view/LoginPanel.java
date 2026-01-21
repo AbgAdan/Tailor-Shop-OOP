@@ -1,3 +1,4 @@
+// com.tailorshop.view.LoginPanel.java
 package com.tailorshop.view;
 
 import com.tailorshop.controller.AuthController;
@@ -49,7 +50,7 @@ public class LoginPanel extends JPanel {
         // Butang
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
         JButton loginBtn = new JButton("Log Masuk");
-        JButton backBtn = new JButton("Kembali ke Menu");
+        JButton backBtn = new JButton("❮ Kembali ke Menu");
 
         styleButton(loginBtn, StyleUtil.CUSTOMER_COLOR);
         styleButton(backBtn, Color.GRAY);
@@ -73,13 +74,16 @@ public class LoginPanel extends JPanel {
 
         try {
             AuthController authController = new AuthController();
-            User user = authController.login(email, password);
+            User user = authController.login(email, password); // ← mesti pulangkan User lengkap (termasuk id)
 
             if (user != null) {
                 Runnable onLogout = () -> navigateTo(new MainMenuPanel());
 
                 JPanel dashboard;
-                switch (user.getRole().toUpperCase()) {
+                String role = user.getRole().toUpperCase();
+
+                // 🔑 UBAH DI SINI: Hantar ID pengguna ke dashboard
+                switch (role) {
                     case "CUSTOMER":
                         dashboard = new CustomerDashboard(onLogout);
                         break;
@@ -87,11 +91,13 @@ public class LoginPanel extends JPanel {
                         dashboard = new TailorDashboard(onLogout);
                         break;
                     case "BOSS":
-                        dashboard = new BossDashboard(onLogout);
+                        // ✅ HANTAR user.getId() ke BossDashboard
+                        dashboard = new BossDashboard(onLogout, user.getId());
                         break;
                     default:
-                        throw new IllegalStateException("Peranan tidak dikenali: " + user.getRole());
+                        throw new IllegalStateException("Peranan tidak dikenali: " + role);
                 }
+
                 navigateTo(dashboard);
             } else {
                 JOptionPane.showMessageDialog(this, "Emel atau kata laluan salah!", "Ralat", JOptionPane.ERROR_MESSAGE);

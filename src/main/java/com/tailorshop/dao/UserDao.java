@@ -12,4 +12,5 @@ public interface UserDao {
     
     boolean userExistsByNameAndEmail(String name, String email);
     boolean updatePassword(String email, String newPassword);
+    String generateNextId(String role);
 }

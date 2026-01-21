@@ -1,3 +1,4 @@
+// com.tailorshop.dao.impl.UserDaoImpl
 package com.tailorshop.DaoImpl;
 
 import com.tailorshop.dao.UserDao;
@@ -5,12 +6,13 @@ import com.tailorshop.model.User;
 import com.tailorshop.util.DatabaseConnection;
 
 import java.sql.*;
+import java.time.Year;
 
 public class UserDaoImpl implements UserDao {
 
     @Override
     public User findByEmailAndPassword(String email, String password) {
-        String sql = "SELECT name, email, role FROM users WHERE email = ? AND password = ?";
+        String sql = "SELECT id, name, email, role, registered_by FROM users WHERE email = ? AND password = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
@@ -20,10 +22,12 @@ public class UserDaoImpl implements UserDao {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new User(
+                        rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("email"),
-                        password, // atau kosongkan jika tak simpan
-                        rs.getString("role")
+                        password,
+                        rs.getString("role"),
+                        rs.getString("registered_by")
                     );
                 }
             }
@@ -35,7 +39,7 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public User findByEmail(String email) {
-        String sql = "SELECT name, email, password, role FROM users WHERE email = ?";
+        String sql = "SELECT id, name, email, password, role, registered_by FROM users WHERE email = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
@@ -44,10 +48,12 @@ public class UserDaoImpl implements UserDao {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new User(
+                        rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("email"),
                         rs.getString("password"),
-                        rs.getString("role")
+                        rs.getString("role"),
+                        rs.getString("registered_by")
                     );
                 }
             }
@@ -59,14 +65,21 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public boolean save(User user) {
-        String sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+        // Jana ID jika belum ada
+        if (user.getId() == null || user.getId().isEmpty()) {
+            user.setId(generateNextId(user.getRole()));
+        }
+
+        String sql = "INSERT INTO users (id, name, email, password, role, registered_by) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, user.getName());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getRole());
+            stmt.setString(1, user.getId());
+            stmt.setString(2, user.getName());
+            stmt.setString(3, user.getEmail());
+            stmt.setString(4, user.getPassword());
+            stmt.setString(5, user.getRole());
+            stmt.setString(6, user.getRegisteredBy());
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -108,6 +121,45 @@ public class UserDaoImpl implements UserDao {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    @Override
+    public String generateNextId(String role) {
+        String prefix = getRolePrefix(role);
+        String year = String.valueOf(Year.now().getValue());
+
+        String sql = "SELECT MAX(id) FROM users WHERE id LIKE ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, prefix + "%" + year);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                String lastId = rs.getString(1);
+                if (lastId != null) {
+                    // Ekstrak nombor urutan (contoh: C0012026 → 001)
+                    String numPart = lastId.substring(1, 4); // ambil 3 digit selepas prefix
+                    int nextNum = Integer.parseInt(numPart) + 1;
+                    return String.format("%s%03d%s", prefix, nextNum, year);
+                }
+            }
+            // ID pertama untuk tahun ini
+            return String.format("%s001%s", prefix, year);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return prefix + "001" + year;
+        }
+    }
+
+    private String getRolePrefix(String role) {
+        switch (role.toUpperCase()) {
+            case "CUSTOMER": return "C";
+            case "TAILOR":   return "T";
+            case "BOSS":     return "B";
+            case "ADMIN":    return "A";
+            default: throw new IllegalArgumentException("Role tidak sah: " + role);
         }
     }
 }

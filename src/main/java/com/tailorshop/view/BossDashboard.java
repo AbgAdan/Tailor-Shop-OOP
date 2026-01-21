@@ -1,3 +1,4 @@
+// com.tailorshop.view.BossDashboard.java
 package com.tailorshop.view;
 
 import com.tailorshop.main.Main;
@@ -10,15 +11,22 @@ public class BossDashboard extends JPanel {
 
     private static final long serialVersionUID = 1L;
     private final Runnable onLogout;
+    private final String currentBossId; // ID Boss yang sedang log masuk
 
-    public BossDashboard(Runnable onLogout) {
+    /**
+     * Constructor
+     * @param onLogout Callback untuk logout
+     * @param bossId ID Boss semasa (contoh: "B0012026")
+     */
+    public BossDashboard(Runnable onLogout, String bossId) {
         this.onLogout = onLogout;
+        this.currentBossId = bossId;
         initializeUI();
     }
 
     private void initializeUI() {
         setLayout(new BorderLayout());
-        setBackground(StyleUtil.BG_LIGHT); // ← guna StyleUtil, bukan hardcoded
+        setBackground(StyleUtil.BG_LIGHT);
 
         // Header
         JPanel header = new JPanel(new BorderLayout());
@@ -63,7 +71,18 @@ public class BossDashboard extends JPanel {
                 BorderFactory.createLineBorder(Color.DARK_GRAY, 1),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
-            btn.addActionListener(e -> showFeatureNotReady(item));
+
+            if ("Pengurusan Staff".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new BossRegisterPanel(
+                        () -> navigateTo(new BossDashboard(onLogout, currentBossId)),
+                        currentBossId
+                    )
+                ));
+            } else {
+                btn.addActionListener(e -> showFeatureNotReady(item));
+            }
+
             menuPanel.add(btn);
         }
 
@@ -103,7 +122,6 @@ public class BossDashboard extends JPanel {
         );
     }
 
-    // Method navigasi selamat
     protected void navigateTo(JPanel panel) {
         if (Main.mainFrame != null) {
             Main.mainFrame.setContentPane(panel);
