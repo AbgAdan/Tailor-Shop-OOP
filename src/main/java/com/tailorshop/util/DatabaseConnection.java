@@ -1,4 +1,4 @@
-package com.tailorshop.database;
+package com.tailorshop.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

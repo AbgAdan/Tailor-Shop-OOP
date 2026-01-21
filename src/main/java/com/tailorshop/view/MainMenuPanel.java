@@ -1,4 +1,4 @@
-package com.tailorshop.gui;
+package com.tailorshop.view;
 
 import com.tailorshop.util.StyleUtil;
 
@@ -51,7 +51,7 @@ public class MainMenuPanel extends JPanel {
         subtitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 
         // Butang Daftar
-        JButton registerBtn = createButton("Daftar (Pelanggan)");
+        JButton registerBtn = createButton("Daftar");
         addHoverEffect(registerBtn, StyleUtil.CUSTOMER_COLOR);
         registerBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         registerBtn.addActionListener(e -> navigateTo(new RegisterPanel()));

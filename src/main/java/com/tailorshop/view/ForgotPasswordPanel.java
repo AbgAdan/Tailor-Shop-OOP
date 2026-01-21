@@ -1,48 +1,24 @@
-package com.tailorshop.gui;
+package com.tailorshop.view;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-
-import com.tailorshop.database.DatabaseConnection;
+import com.tailorshop.controller.ForgotPasswordController;
 import com.tailorshop.util.StyleUtil;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class ForgotPasswordPanel extends JPanel {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public ForgotPasswordPanel() {
+    public ForgotPasswordPanel() {
         setLayout(new BorderLayout());
         setBackground(StyleUtil.BG_LIGHT);
 
-        // Header
         JLabel header = new JLabel("🔑 LUPA KATA LALUAN", JLabel.CENTER);
         header.setFont(new Font("Segoe UI", Font.BOLD, 20));
         header.setBorder(BorderFactory.createEmptyBorder(30, 0, 20, 0));
         add(header, BorderLayout.NORTH);
 
-        // Fasa 1: Masukkan Nama & Emel
         showEmailForm();
     }
 
@@ -80,10 +56,16 @@ public class ForgotPasswordPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Sila isi semua medan!", "Ralat", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            if (verifyUser(name, email)) {
-                showPasswordForm(email);
-            } else {
-                JOptionPane.showMessageDialog(this, "Maklumat tidak sepadan!\nSila semak nama dan emel.", "Ralat", JOptionPane.ERROR_MESSAGE);
+
+            try {
+                ForgotPasswordController controller = new ForgotPasswordController();
+                if (controller.verifyUser(name, email)) {
+                    showPasswordForm(email);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Maklumat tidak sepadan!\nSila semak nama dan emel.", "Ralat", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -145,11 +127,16 @@ public class ForgotPasswordPanel extends JPanel {
                 return;
             }
 
-            if (updatePassword(email, pass1)) {
-                JOptionPane.showMessageDialog(this, "Kata laluan berjaya dikemaskini!\nSila log masuk semula.", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
-                navigateTo(new MainMenuPanel());
-            } else {
-                JOptionPane.showMessageDialog(this, "Gagal mengemaskini kata laluan.", "Ralat", JOptionPane.ERROR_MESSAGE);
+            try {
+                ForgotPasswordController controller = new ForgotPasswordController();
+                if (controller.resetPassword(email, pass1)) {
+                    JOptionPane.showMessageDialog(this, "Kata laluan berjaya dikemaskini!\nSila log masuk semula.", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
+                    navigateTo(new MainMenuPanel());
+                } else {
+                    JOptionPane.showMessageDialog(this, "Gagal mengemaskini kata laluan.", "Ralat", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -167,37 +154,6 @@ public class ForgotPasswordPanel extends JPanel {
         repaint();
     }
 
-    private boolean verifyUser(String name, String email) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM users WHERE name = ? AND email = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, name);
-                stmt.setString(2, email);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    }
-
-    private boolean updatePassword(String email, String newPassword) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE users SET password = ? WHERE email = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, newPassword);
-                stmt.setString(2, email);
-                return stmt.executeUpdate() > 0;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    }
-
     private void styleButton(JButton btn, Color bgColor) {
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         btn.setBackground(bgColor);
@@ -209,11 +165,11 @@ public class ForgotPasswordPanel extends JPanel {
     }
 
     private void navigateTo(JPanel panel) {
-        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        if (frame != null) {
-            frame.setContentPane(panel);
-            frame.revalidate();
-            frame.repaint();
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            ((JFrame) window).setContentPane(panel);
+            window.revalidate();
+            window.repaint();
         }
     }
 }

@@ -4,7 +4,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import com.tailorshop.gui.MainMenuPanel;
+import com.tailorshop.view.MainMenuPanel;
 
 public class Main {
     public static void main(String[] args) {

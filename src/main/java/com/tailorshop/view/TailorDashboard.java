@@ -1,4 +1,4 @@
-package com.tailorshop.gui;
+package com.tailorshop.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -12,23 +12,23 @@ import javax.swing.JPanel;
 
 import com.tailorshop.util.StyleUtil;
 
-public class BossDashboard extends JPanel {
+public class TailorDashboard extends JPanel {
 
     /**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public BossDashboard(Runnable onLogout) {
+	public TailorDashboard(Runnable onLogout) {
         setLayout(new BorderLayout());
-        setBackground(new Color(250, 240, 250)); // Light purple background
+        setBackground(new Color(240, 255, 240)); // Light green background
 
         // Header
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(StyleUtil.BOSS_COLOR);
+        header.setBackground(StyleUtil.TAILOR_COLOR);
         header.setPreferredSize(new Dimension(0, 70));
 
-        JLabel title = new JLabel("👑 MENU PENGURUS", JLabel.LEFT);
+        JLabel title = new JLabel("👔 MENU TUKANG JAHIT", JLabel.LEFT);
         title.setFont(StyleUtil.TITLE_FONT);
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
@@ -43,10 +43,10 @@ public class BossDashboard extends JPanel {
 
         // Menu items
         String[] menuItems = {
-            "Pengurusan Staff",
-            "Pantau Semua Pesanan",
-            "Laporan Bulanan",
-            "Analisis Pekerja"
+            "Senarai Pesanan Saya",
+            "Kemaskini Status Pesanan",
+            "Lihat Ukuran Pelanggan",
+            "Laporan Harian"
         };
 
         JPanel menuPanel = new JPanel(new GridLayout(2, 2, 20, 20));
@@ -56,14 +56,14 @@ public class BossDashboard extends JPanel {
         for (String item : menuItems) {
             JButton btn = new JButton(item);
             btn.setFont(StyleUtil.BUTTON_FONT);
-            btn.setBackground(StyleUtil.BOSS_COLOR);
+            btn.setBackground(StyleUtil.TAILOR_COLOR);
             btn.setForeground(Color.WHITE);
             btn.setFocusPainted(false);
             btn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.DARK_GRAY, 1),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
-            // 🔜 Tambah fungsi nanti
+            // 🔜 Tambah ActionListener nanti
             menuPanel.add(btn);
         }
 

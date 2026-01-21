@@ -1,4 +1,4 @@
-package com.tailorshop.gui;
+package com.tailorshop.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -8,20 +8,18 @@ import java.awt.GridLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.tailorshop.util.StyleUtil;
 
 public class CustomerDashboard extends JPanel {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public CustomerDashboard(Runnable onLogout) {
+    public CustomerDashboard(Runnable onLogout) {
         setLayout(new BorderLayout());
-        setBackground(new Color(240, 248, 255)); // Alice Blue
+        setBackground(StyleUtil.BG_LIGHT); // ← guna warna dari StyleUtil jika ada, atau biar Alice Blue
 
         // Header
         JPanel header = new JPanel(new BorderLayout());
@@ -36,7 +34,7 @@ public class CustomerDashboard extends JPanel {
 
         JButton logoutBtn = new JButton("Log Keluar");
         logoutBtn.setFocusPainted(false);
-        logoutBtn.addActionListener(e -> onLogout.run()); // 🔁 Panggil callback
+        logoutBtn.addActionListener(e -> onLogout.run());
         header.add(logoutBtn, BorderLayout.EAST);
 
         add(header, BorderLayout.NORTH);
@@ -63,7 +61,12 @@ public class CustomerDashboard extends JPanel {
                 BorderFactory.createLineBorder(Color.DARK_GRAY, 1),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
-            // 🔜 Tambah ActionListener untuk setiap fungsi nanti
+            
+            // 🔜 Placeholder untuk masa depan
+            btn.addActionListener(e -> 
+                JOptionPane.showMessageDialog(this, "Fungsi \"" + item + "\" sedang dalam pembangunan.", "Makluman", JOptionPane.INFORMATION_MESSAGE)
+            );
+            
             menuPanel.add(btn);
         }
 
