@@ -7,6 +7,10 @@ import javax.swing.UIManager;
 import com.tailorshop.view.MainMenuPanel;
 
 public class Main {
+
+    // 🔑 Simpan rujukan global ke JFrame utama
+    public static JFrame mainFrame;
+
     public static void main(String[] args) {
         // Jalankan dalam Event Dispatch Thread (EDT)
         SwingUtilities.invokeLater(() -> {
@@ -18,13 +22,15 @@ public class Main {
                 System.err.println("⚠️ Gagal set system look and feel: " + e.getMessage());
             }
 
-            // Cipta tetingkap utama
-            JFrame frame = new JFrame("Sistem Tempahan Jahitan - TailorShop");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(900, 600);
-            frame.setLocationRelativeTo(null); // tengah skrin
-            frame.add(new MainMenuPanel());      // mulakan dari login
-            frame.setVisible(true);
+            // Cipta tetingkap utama dan simpan rujukan
+            mainFrame = new JFrame("Sistem Tempahan Jahitan - TailorShop");
+            mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            mainFrame.setSize(900, 600);
+            mainFrame.setLocationRelativeTo(null); // tengah skrin
+
+            // Mulakan dari menu utama
+            mainFrame.setContentPane(new MainMenuPanel());
+            mainFrame.setVisible(true);
         });
     }
 }

@@ -1,13 +1,12 @@
 package com.tailorshop.view;
 
 import com.tailorshop.controller.AuthController;
+import com.tailorshop.main.Main;
 import com.tailorshop.model.User;
 import com.tailorshop.util.StyleUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class LoginPanel extends JPanel {
 
@@ -50,12 +49,12 @@ public class LoginPanel extends JPanel {
         // Butang
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
         JButton loginBtn = new JButton("Log Masuk");
-        JButton backBtn = new JButton("❮ Kembali ke Menu");
+        JButton backBtn = new JButton("Kembali ke Menu");
 
         styleButton(loginBtn, StyleUtil.CUSTOMER_COLOR);
         styleButton(backBtn, Color.GRAY);
 
-        loginBtn.addActionListener(this::onLoginClick);
+        loginBtn.addActionListener(e -> handleLogin());
         backBtn.addActionListener(e -> navigateTo(new MainMenuPanel()));
 
         buttonPanel.add(backBtn);
@@ -63,7 +62,7 @@ public class LoginPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    private void onLoginClick(ActionEvent e) {
+    private void handleLogin() {
         String email = emailField.getText().trim();
         String password = new String(passField.getPassword()).trim();
 
@@ -112,15 +111,13 @@ public class LoginPanel extends JPanel {
         btn.setOpaque(true);
     }
 
-    private void navigateTo(JPanel panel) {
-        Window window = SwingUtilities.getWindowAncestor(this);
-        if (window instanceof JFrame) {
-            JFrame frame = (JFrame) window;
-            frame.setContentPane(panel);
-            frame.revalidate();
-            frame.repaint();
+    protected void navigateTo(JPanel panel) {
+        if (Main.mainFrame != null) {
+            Main.mainFrame.setContentPane(panel);
+            Main.mainFrame.revalidate();
+            Main.mainFrame.repaint();
         } else {
-            JOptionPane.showMessageDialog(this, "Ralat navigasi: Tetingkap utama tidak dijumpai.", "Ralat", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Ralat: Tetingkap utama tidak tersedia.", "Ralat", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

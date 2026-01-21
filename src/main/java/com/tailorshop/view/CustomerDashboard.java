@@ -1,25 +1,24 @@
 package com.tailorshop.view;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-
+import com.tailorshop.main.Main; // ← penting untuk akses mainFrame
 import com.tailorshop.util.StyleUtil;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class CustomerDashboard extends JPanel {
 
     private static final long serialVersionUID = 1L;
+    private final Runnable onLogout;
 
     public CustomerDashboard(Runnable onLogout) {
+        this.onLogout = onLogout;
+        initializeUI();
+    }
+
+    private void initializeUI() {
         setLayout(new BorderLayout());
-        setBackground(StyleUtil.BG_LIGHT); // ← guna warna dari StyleUtil jika ada, atau biar Alice Blue
+        setBackground(StyleUtil.BG_LIGHT);
 
         // Header
         JPanel header = new JPanel(new BorderLayout());
@@ -34,7 +33,10 @@ public class CustomerDashboard extends JPanel {
 
         JButton logoutBtn = new JButton("Log Keluar");
         logoutBtn.setFocusPainted(false);
-        logoutBtn.addActionListener(e -> onLogout.run());
+        logoutBtn.setFont(StyleUtil.BUTTON_FONT);
+        logoutBtn.setForeground(Color.WHITE);
+        logoutBtn.setBackground(StyleUtil.CUSTOMER_COLOR.darker());
+        logoutBtn.addActionListener(e -> handleLogout());
         header.add(logoutBtn, BorderLayout.EAST);
 
         add(header, BorderLayout.NORTH);
@@ -61,15 +63,59 @@ public class CustomerDashboard extends JPanel {
                 BorderFactory.createLineBorder(Color.DARK_GRAY, 1),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
-            
-            // 🔜 Placeholder untuk masa depan
-            btn.addActionListener(e -> 
-                JOptionPane.showMessageDialog(this, "Fungsi \"" + item + "\" sedang dalam pembangunan.", "Makluman", JOptionPane.INFORMATION_MESSAGE)
-            );
-            
+            btn.addActionListener(e -> showFeatureNotReady(item));
             menuPanel.add(btn);
         }
 
         add(menuPanel, BorderLayout.CENTER);
+    }
+
+    private void handleLogout() {
+        try {
+            if (onLogout != null) {
+                onLogout.run(); // ← ini akan kembali ke MainMenuPanel (ditentukan oleh pemanggil)
+            } else {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Ralat: Callback logout tidak disediakan.",
+                    "Ralat",
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Ralat semasa logout: " + ex.getMessage(),
+                "Ralat",
+                JOptionPane.ERROR_MESSAGE
+            );
+            ex.printStackTrace();
+        }
+    }
+
+    private void showFeatureNotReady(String featureName) {
+        JOptionPane.showMessageDialog(
+            this,
+            "Fungsi \"" + featureName + "\" sedang dalam pembangunan.\n\n" +
+            "Akan tersedia dalam versi akan datang.",
+            "Makluman",
+            JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    // Method navigasi selamat — guna Main.mainFrame
+    protected void navigateTo(JPanel panel) {
+        if (Main.mainFrame != null) {
+            Main.mainFrame.setContentPane(panel);
+            Main.mainFrame.revalidate();
+            Main.mainFrame.repaint();
+        } else {
+            JOptionPane.showMessageDialog(
+                this,
+                "Tetingkap utama tidak dijumpai.",
+                "Ralat Navigasi",
+                JOptionPane.WARNING_MESSAGE
+            );
+        }
     }
 }
