@@ -7,8 +7,12 @@ import com.tailorshop.util.StyleUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class CompleteProfilePanel extends JPanel {
+
     private static final long serialVersionUID = 1L;
     private final String userId;
     private final String role;
@@ -17,10 +21,11 @@ public class CompleteProfilePanel extends JPanel {
     private JTextField phoneField;
     private JTextField addressField;
     private JComboBox<String> genderCombo;
+    private JTextField birthDateField; // Tarikh lahir
 
     public CompleteProfilePanel(String userId, String role, Runnable onProfileComplete) {
         this.userId = userId;
-        this.role = role;
+        this.role = role.toUpperCase();
         this.onProfileComplete = onProfileComplete;
         initializeUI();
     }
@@ -41,8 +46,9 @@ public class CompleteProfilePanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         phoneField = new JTextField(20);
-        
-        // Hanya customer perlu gender & address
+        birthDateField = new JTextField(20);
+        birthDateField.setText("YYYY-MM-DD"); // Placeholder
+
         if ("CUSTOMER".equalsIgnoreCase(role)) {
             genderCombo = new JComboBox<>(new String[]{"Lelaki", "Perempuan"});
             addressField = new JTextField(20);
@@ -50,13 +56,16 @@ public class CompleteProfilePanel extends JPanel {
             gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("Jantina:"), gbc);
             gbc.gridx = 1; formPanel.add(genderCombo, gbc);
 
-            gbc.gridx = 0; gbc.gridy = 1; formPanel.add(new JLabel("No. Telefon:"), gbc);
+            gbc.gridx = 0; gbc.gridy = 1; formPanel.add(new JLabel("Tarikh Lahir (YYYY-MM-DD):"), gbc);
+            gbc.gridx = 1; formPanel.add(birthDateField, gbc);
+
+            gbc.gridx = 0; gbc.gridy = 2; formPanel.add(new JLabel("No. Telefon:"), gbc);
             gbc.gridx = 1; formPanel.add(phoneField, gbc);
 
-            gbc.gridx = 0; gbc.gridy = 2; formPanel.add(new JLabel("Alamat:"), gbc);
+            gbc.gridx = 0; gbc.gridy = 3; formPanel.add(new JLabel("Alamat:"), gbc);
             gbc.gridx = 1; formPanel.add(addressField, gbc);
         } else {
-            // Tailor: hanya no. telefon
+            // Tailor: hanya telefon
             gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("No. Telefon:"), gbc);
             gbc.gridx = 1; formPanel.add(phoneField, gbc);
         }
@@ -73,17 +82,50 @@ public class CompleteProfilePanel extends JPanel {
 
     private void handleSave() {
         String phone = phoneField.getText().trim();
-        String gender = genderCombo != null ? (String) genderCombo.getSelectedItem() : null;
-        String address = addressField != null ? addressField.getText().trim() : null;
+        if (phone.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nombor telefon diperlukan!", "Ralat", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-        try {
-            ProfileController controller = new ProfileController();
-            controller.saveProfile(userId, role, gender, phone, address);
-            
-            JOptionPane.showMessageDialog(this, "Profil berjaya dikemaskini!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
-            onProfileComplete.run(); // Kembali ke dashboard
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
+        if ("CUSTOMER".equalsIgnoreCase(role)) {
+            String gender = (String) genderCombo.getSelectedItem();
+            String address = addressField.getText().trim();
+            String dateStr = birthDateField.getText().trim();
+
+            if (address.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Alamat diperlukan!", "Ralat", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            LocalDate birthDate;
+            try {
+                birthDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            } catch (DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(this, "Format tarikh salah! Gunakan YYYY-MM-DD", "Ralat", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                ProfileController controller = new ProfileController();
+                // Simpan profil & auto-tambah user utama ke family_members
+                controller.saveProfileWithBirthDate(userId, role, gender, phone, address, birthDate);
+                JOptionPane.showMessageDialog(this, "Profil berjaya dikemaskini!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
+                onProfileComplete.run();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        } else {
+            // Tailor
+            try {
+                ProfileController controller = new ProfileController();
+                controller.saveProfile(userId, role, null, phone, null);
+                JOptionPane.showMessageDialog(this, "Profil berjaya dikemaskini!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
+                onProfileComplete.run();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         }
     }
 

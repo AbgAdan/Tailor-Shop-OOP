@@ -8,6 +8,9 @@ import com.tailorshop.util.StyleUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class ProfailPanel extends JPanel {
 
@@ -24,6 +27,7 @@ public class ProfailPanel extends JPanel {
     private JTextField phoneField;
     private JComboBox<String> genderCombo;
     private JTextField addressField;
+    private JTextField birthDateField;
     private JPanel contentPanel;
 
     public ProfailPanel(String userId, String role, String name, String email, Runnable onBack) {
@@ -105,12 +109,12 @@ public class ProfailPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         panel.add(new JLabel("Nama:"), gbc);
         gbc.gridx = 1;
-        panel.add(new JLabel(userName), gbc); // ← guna data sebenar
+        panel.add(new JLabel(userName), gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
         panel.add(new JLabel("Emel:"), gbc);
         gbc.gridx = 1;
-        panel.add(new JLabel(userEmail), gbc); // ← guna data sebenar
+        panel.add(new JLabel(userEmail), gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
         panel.add(new JLabel("No. Telefon:"), gbc);
@@ -128,6 +132,13 @@ public class ProfailPanel extends JPanel {
             panel.add(new JLabel(gender), gbc);
 
             gbc.gridx = 0; gbc.gridy = 4;
+            panel.add(new JLabel("Tarikh Lahir:"), gbc);
+            String birthDate = (currentProfile != null && currentProfile.getBirthDate() != null) ? 
+                              currentProfile.getBirthDate().toString() : "Belum ditetapkan";
+            gbc.gridx = 1;
+            panel.add(new JLabel(birthDate), gbc);
+
+            gbc.gridx = 0; gbc.gridy = 5;
             panel.add(new JLabel("Alamat:"), gbc);
             String address = (currentProfile != null && currentProfile.getAddress() != null) ? 
                             currentProfile.getAddress() : "Belum ditetapkan";
@@ -153,6 +164,13 @@ public class ProfailPanel extends JPanel {
                 genderCombo.setSelectedItem(currentProfile.getGender());
             }
 
+            birthDateField = new JTextField(20);
+            if (currentProfile != null && currentProfile.getBirthDate() != null) {
+                birthDateField.setText(currentProfile.getBirthDate().toString());
+            } else {
+                birthDateField.setText("YYYY-MM-DD");
+            }
+
             addressField = new JTextField(20);
             if (currentProfile != null && currentProfile.getAddress() != null) {
                 addressField.setText(currentProfile.getAddress());
@@ -164,6 +182,11 @@ public class ProfailPanel extends JPanel {
             panel.add(genderCombo, gbc);
 
             gbc.gridx = 0; gbc.gridy = 4;
+            panel.add(new JLabel("Tarikh Lahir (YYYY-MM-DD):"), gbc);
+            gbc.gridx = 1;
+            panel.add(birthDateField, gbc);
+
+            gbc.gridx = 0; gbc.gridy = 5;
             panel.add(new JLabel("Alamat:"), gbc);
             gbc.gridx = 1;
             panel.add(addressField, gbc);
@@ -177,32 +200,50 @@ public class ProfailPanel extends JPanel {
             return;
         }
 
-        String gender = null;
-        String address = null;
-
         if ("CUSTOMER".equals(role)) {
-            gender = (String) genderCombo.getSelectedItem();
-            address = addressField.getText().trim();
+            String gender = (String) genderCombo.getSelectedItem();
+            String address = addressField.getText().trim();
+            String dateStr = birthDateField.getText().trim();
+
             if (address.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Alamat diperlukan!", "Ralat", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-        }
 
-        try {
-            ProfileController controller = new ProfileController();
-            controller.saveProfile(userId, role, gender, phone, address);
-            
-            loadProfileData();
-            isEditMode = false;
-            refreshContent();
-            
-            actionBtn.setText("Kemaskini Profil");
-            
-            JOptionPane.showMessageDialog(this, "Profil berjaya dikemaskini!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
+            LocalDate birthDate;
+            try {
+                birthDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            } catch (DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(this, "Format tarikh salah! Gunakan YYYY-MM-DD", "Ralat", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                ProfileController controller = new ProfileController();
+                controller.saveProfileWithBirthDate(userId, role, gender, phone, address, birthDate);
+                loadProfileData();
+                isEditMode = false;
+                refreshContent();
+                actionBtn.setText("Kemaskini Profil");
+                JOptionPane.showMessageDialog(this, "Profil berjaya dikemaskini!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        } else {
+            // Tailor
+            try {
+                ProfileController controller = new ProfileController();
+                controller.saveProfile(userId, role, null, phone, null);
+                loadProfileData();
+                isEditMode = false;
+                refreshContent();
+                actionBtn.setText("Kemaskini Profil");
+                JOptionPane.showMessageDialog(this, "Profil berjaya dikemaskini!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         }
     }
 

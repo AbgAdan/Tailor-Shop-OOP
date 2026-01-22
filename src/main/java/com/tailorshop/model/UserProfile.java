@@ -1,13 +1,15 @@
-// com.tailorshop.model.UserProfile
+// com.tailorshop.model.UserProfile.java
 package com.tailorshop.model;
+
+import java.time.LocalDate;
 
 public class UserProfile {
     private String userId;
-    private String gender;      // null jika bukan customer
-    private String phone;       // wajib
-    private String address;     // null jika bukan customer
+    private String gender;
+    private String phone;
+    private String address;
+    private LocalDate birthDate; // ← TAMBAH INI
 
-    // Constructor
     public UserProfile(String userId, String phone) {
         this.userId = userId;
         this.phone = phone;
@@ -21,4 +23,8 @@ public class UserProfile {
     public void setPhone(String phone) { this.phone = phone; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+    
+    // 🔑 TAMBAH INI
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
 }

@@ -72,7 +72,13 @@ public class CustomerDashboard extends JPanel {
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
 
-            if ("Profil Saya".equals(item)) {
+            if ("Urus Ahli Keluarga".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new FamilyMemberPanel(currentUserId, userName, () -> 
+                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else if ("Profil Saya".equals(item)) {
                 btn.addActionListener(e -> navigateTo(
                     new ProfailPanel(currentUserId, "CUSTOMER", userName, userEmail, () -> 
                         navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
@@ -102,7 +108,8 @@ public class CustomerDashboard extends JPanel {
     private void showFeatureNotReady(String featureName) {
         JOptionPane.showMessageDialog(
             this,
-            "Fungsi \"" + featureName + "\" sedang dalam pembangunan.",
+            "Fungsi \"" + featureName + "\" sedang dalam pembangunan.\n\n" +
+            "Akan tersedia dalam versi akan datang.",
             "Makluman",
             JOptionPane.INFORMATION_MESSAGE
         );
@@ -113,6 +120,13 @@ public class CustomerDashboard extends JPanel {
             Main.mainFrame.setContentPane(panel);
             Main.mainFrame.revalidate();
             Main.mainFrame.repaint();
+        } else {
+            JOptionPane.showMessageDialog(
+                this,
+                "Tetingkap utama tidak dijumpai.",
+                "Ralat Navigasi",
+                JOptionPane.WARNING_MESSAGE
+            );
         }
     }
 }
