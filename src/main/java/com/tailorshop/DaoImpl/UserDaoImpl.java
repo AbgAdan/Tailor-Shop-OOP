@@ -152,6 +152,22 @@ public class UserDaoImpl implements UserDao {
             return prefix + "001" + year;
         }
     }
+    
+    @Override
+    public String findNameById(String userId) {
+        String sql = "SELECT name FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("name");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     private String getRolePrefix(String role) {
         switch (role.toUpperCase()) {

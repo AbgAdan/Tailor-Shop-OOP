@@ -21,7 +21,7 @@ public class CompleteProfilePanel extends JPanel {
     private JTextField phoneField;
     private JTextField addressField;
     private JComboBox<String> genderCombo;
-    private JTextField birthDateField; // Tarikh lahir
+    private JTextField birthDateField;
 
     public CompleteProfilePanel(String userId, String role, Runnable onProfileComplete) {
         this.userId = userId;
@@ -47,7 +47,7 @@ public class CompleteProfilePanel extends JPanel {
 
         phoneField = new JTextField(20);
         birthDateField = new JTextField(20);
-        birthDateField.setText("YYYY-MM-DD"); // Placeholder
+        birthDateField.setText("YYYY-MM-DD");
 
         if ("CUSTOMER".equalsIgnoreCase(role)) {
             genderCombo = new JComboBox<>(new String[]{"Lelaki", "Perempuan"});
@@ -65,7 +65,6 @@ public class CompleteProfilePanel extends JPanel {
             gbc.gridx = 0; gbc.gridy = 3; formPanel.add(new JLabel("Alamat:"), gbc);
             gbc.gridx = 1; formPanel.add(addressField, gbc);
         } else {
-            // Tailor: hanya telefon
             gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("No. Telefon:"), gbc);
             gbc.gridx = 1; formPanel.add(phoneField, gbc);
         }
@@ -107,7 +106,6 @@ public class CompleteProfilePanel extends JPanel {
 
             try {
                 ProfileController controller = new ProfileController();
-                // Simpan profil & auto-tambah user utama ke family_members
                 controller.saveProfileWithBirthDate(userId, role, gender, phone, address, birthDate);
                 JOptionPane.showMessageDialog(this, "Profil berjaya dikemaskini!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
                 onProfileComplete.run();
@@ -116,7 +114,6 @@ public class CompleteProfilePanel extends JPanel {
                 ex.printStackTrace();
             }
         } else {
-            // Tailor
             try {
                 ProfileController controller = new ProfileController();
                 controller.saveProfile(userId, role, null, phone, null);

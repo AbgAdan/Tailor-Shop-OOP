@@ -7,6 +7,7 @@ public interface UserDao {
     
     User findByEmailAndPassword(String email, String password);
     User findByEmail(String email);
+    String findNameById(String userId);
     
     boolean save(User user);
     
