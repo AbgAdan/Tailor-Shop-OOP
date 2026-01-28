@@ -33,7 +33,7 @@ public class BossRegisterPanel extends JPanel {
         setBackground(StyleUtil.BG_LIGHT);
 
         // Header
-        JLabel header = new JLabel("➕ DAFTAR PENGGUNA BARU", JLabel.CENTER);
+        JLabel header = new JLabel("DAFTAR PENGGUNA BARU", JLabel.CENTER);
         header.setFont(StyleUtil.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
         add(header, BorderLayout.NORTH);
@@ -75,7 +75,7 @@ public class BossRegisterPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
         
         JButton registerBtn = new JButton("Daftar Pengguna");
-        JButton backBtn = new JButton("❮ Kembali");
+        JButton backBtn = new JButton("Kembali");
 
         styleButton(registerBtn, StyleUtil.BOSS_COLOR);
         styleButton(backBtn, Color.GRAY);

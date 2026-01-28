@@ -11,16 +11,16 @@ public class BossDashboard extends JPanel {
 
     private static final long serialVersionUID = 1L;
     private final Runnable onLogout;
-    private final String currentBossId; // ID Boss yang sedang log masuk
+    private final String currentUserId;
+    private final String userName;
+    private final String userEmail; // ← TAMBAH INI
 
-    /**
-     * Constructor
-     * @param onLogout Callback untuk logout
-     * @param bossId ID Boss semasa (contoh: "B0012026")
-     */
-    public BossDashboard(Runnable onLogout, String bossId) {
+    // 🔑 UBAH CONSTRUCTOR - TAMBAH EMAIL
+    public BossDashboard(Runnable onLogout, String userId, String name, String email) {
         this.onLogout = onLogout;
-        this.currentBossId = bossId;
+        this.currentUserId = userId;
+        this.userName = name;
+        this.userEmail = email; // ← SIMPAN EMAIL
         initializeUI();
     }
 
@@ -54,10 +54,12 @@ public class BossDashboard extends JPanel {
             "Pengurusan Staff",
             "Pantau Semua Pesanan",
             "Laporan Bulanan",
-            "Analisis Pekerja"
+            "Analisis Pekerja",
+            "Pengurusan Jenis Pakaian",
+            "Profil Saya"
         };
 
-        JPanel menuPanel = new JPanel(new GridLayout(2, 2, 20, 20));
+        JPanel menuPanel = new JPanel(new GridLayout(3, 2, 20, 20));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
         menuPanel.setBackground(getBackground());
 
@@ -72,14 +74,26 @@ public class BossDashboard extends JPanel {
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
 
-            if ("Pengurusan Staff".equals(item)) {
+            if ("Pengurusan Jenis Pakaian".equals(item)) {
                 btn.addActionListener(e -> navigateTo(
-                    new BossRegisterPanel(
-                        () -> navigateTo(new BossDashboard(onLogout, currentBossId)),
-                        currentBossId
+                    new ManageClothingTypesPanel(currentUserId, () -> 
+                        navigateTo(new BossDashboard(onLogout, currentUserId, userName, userEmail))
                     )
                 ));
-            } else {
+            } else if ("Profil Saya".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new ProfailPanel(currentUserId, "BOSS", userName, userEmail, () -> 
+                        navigateTo(new BossDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else if ("Pengurusan Staff".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new BossRegisterPanel(() -> 
+                        navigateTo(new BossDashboard(onLogout, currentUserId, userName, userEmail)),
+                        currentUserId 
+                    )
+                ));
+            }else {
                 btn.addActionListener(e -> showFeatureNotReady(item));
             }
 
@@ -93,21 +107,9 @@ public class BossDashboard extends JPanel {
         try {
             if (onLogout != null) {
                 onLogout.run();
-            } else {
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Ralat: Callback logout tidak disediakan.",
-                    "Ralat",
-                    JOptionPane.ERROR_MESSAGE
-                );
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                this,
-                "Ralat semasa logout: " + ex.getMessage(),
-                "Ralat",
-                JOptionPane.ERROR_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this, "Ralat semasa logout: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
     }
@@ -127,13 +129,6 @@ public class BossDashboard extends JPanel {
             Main.mainFrame.setContentPane(panel);
             Main.mainFrame.revalidate();
             Main.mainFrame.repaint();
-        } else {
-            JOptionPane.showMessageDialog(
-                this,
-                "Tetingkap utama tidak dijumpai.",
-                "Ralat Navigasi",
-                JOptionPane.WARNING_MESSAGE
-            );
         }
     }
 }

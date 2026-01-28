@@ -53,7 +53,7 @@ public class ProfailPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(StyleUtil.BG_LIGHT);
 
-        JLabel header = new JLabel(" 📋 PROFIL SAYA", JLabel.CENTER);
+        JLabel header = new JLabel("PROFIL SAYA", JLabel.CENTER);
         header.setFont(StyleUtil.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
         add(header, BorderLayout.NORTH);
@@ -62,7 +62,7 @@ public class ProfailPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
         JButton actionBtn = new JButton("Kemaskini Profil");
-        JButton backBtn = new JButton("❮ Kembali");
+        JButton backBtn = new JButton("Kembali");
 
         styleButton(actionBtn, StyleUtil.CUSTOMER_COLOR);
         styleButton(backBtn, Color.GRAY);

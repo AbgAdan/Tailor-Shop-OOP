@@ -78,6 +78,9 @@ public class TailorDashboard extends JPanel {
                         navigateTo(new TailorDashboard(onLogout, currentUserId, userName, userEmail))
                     )
                 ));
+            } else if ("Lihat Ukuran Pelanggan".equals(item)) {
+                // Tailor boleh lihat ukuran pelanggan
+                btn.addActionListener(e -> showFeatureNotReady("Lihat Ukuran Pelanggan"));
             } else {
                 btn.addActionListener(e -> showFeatureNotReady(item));
             }
@@ -102,7 +105,8 @@ public class TailorDashboard extends JPanel {
     private void showFeatureNotReady(String featureName) {
         JOptionPane.showMessageDialog(
             this,
-            "Fungsi \"" + featureName + "\" sedang dalam pembangunan.",
+            "Fungsi \"" + featureName + "\" sedang dalam pembangunan.\n\n" +
+            "Akan tersedia dalam versi akan datang.",
             "Makluman",
             JOptionPane.INFORMATION_MESSAGE
         );

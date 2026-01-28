@@ -14,7 +14,7 @@ public class ForgotPasswordPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(StyleUtil.BG_LIGHT);
 
-        JLabel header = new JLabel("🔑 LUPA KATA LALUAN", JLabel.CENTER);
+        JLabel header = new JLabel("LUPA KATA LALUAN", JLabel.CENTER);
         header.setFont(new Font("Segoe UI", Font.BOLD, 20));
         header.setBorder(BorderFactory.createEmptyBorder(30, 0, 20, 0));
         add(header, BorderLayout.NORTH);
@@ -44,7 +44,7 @@ public class ForgotPasswordPanel extends JPanel {
         gbc.gridx = 1; formPanel.add(emailField, gbc);
 
         JButton nextBtn = new JButton("Seterusnya");
-        JButton backBtn = new JButton("❮ Kembali");
+        JButton backBtn = new JButton("Kembali");
 
         styleButton(nextBtn, StyleUtil.CUSTOMER_COLOR);
         styleButton(backBtn, Color.GRAY);

@@ -51,7 +51,7 @@ public class LoginPanel extends JPanel {
         // Butang
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
         JButton loginBtn = new JButton("Log Masuk");
-        JButton backBtn = new JButton("❮ Kembali ke Menu");
+        JButton backBtn = new JButton("Kembali ke Menu");
 
         styleButton(loginBtn, StyleUtil.CUSTOMER_COLOR);
         styleButton(backBtn, Color.GRAY);
@@ -115,7 +115,7 @@ public class LoginPanel extends JPanel {
             case "TAILOR":
                 return new TailorDashboard(onLogout, userId, user.getName(), user.getEmail());
             case "BOSS":
-                return new BossDashboard(onLogout, userId);
+                return new BossDashboard(onLogout, userId, user.getName(), user.getEmail()); 
             default:
                 throw new IllegalStateException("Peranan tidak dikenali: " + role);
         }

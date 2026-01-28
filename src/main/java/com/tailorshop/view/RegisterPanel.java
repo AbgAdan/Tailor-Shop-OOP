@@ -56,7 +56,7 @@ public class RegisterPanel extends JPanel {
         add(formPanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
-        JButton backButton = new JButton("❮ Kembali ke Menu");
+        JButton backButton = new JButton("Kembali ke Menu");
         JButton registerButton = new JButton("Daftar Akaun");
 
         styleButton(backButton, Color.GRAY);
