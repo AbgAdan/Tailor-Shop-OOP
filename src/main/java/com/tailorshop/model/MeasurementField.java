@@ -4,21 +4,14 @@ package com.tailorshop.model;
 public class MeasurementField {
     private int id;
     private int clothingTypeId;
+    private int bodyMeasurementId;
     private String fieldName;
     private String unit;
     private boolean required;
-    private int displayOrder;
+    private int displayOrder;        // ✅ TAMBAH INI
+    private String createdBy;
 
-    // Constructor kosong
     public MeasurementField() {}
-
-    // Constructor untuk template
-    public MeasurementField(String fieldName, String unit, boolean required, int displayOrder) {
-        this.fieldName = fieldName;
-        this.unit = unit;
-        this.required = required;
-        this.displayOrder = displayOrder;
-    }
 
     // Getter & Setter
     public int getId() { return id; }
@@ -26,6 +19,9 @@ public class MeasurementField {
 
     public int getClothingTypeId() { return clothingTypeId; }
     public void setClothingTypeId(int clothingTypeId) { this.clothingTypeId = clothingTypeId; }
+
+    public int getBodyMeasurementId() { return bodyMeasurementId; }
+    public void setBodyMeasurementId(int bodyMeasurementId) { this.bodyMeasurementId = bodyMeasurementId; }
 
     public String getFieldName() { return fieldName; }
     public void setFieldName(String fieldName) { this.fieldName = fieldName; }
@@ -36,6 +32,14 @@ public class MeasurementField {
     public boolean isRequired() { return required; }
     public void setRequired(boolean required) { this.required = required; }
 
-    public int getDisplayOrder() { return displayOrder; }
-    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+    public int getDisplayOrder() { return displayOrder; }        // ✅
+    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; } // ✅
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+    
+    @Override
+    public String toString() {
+        return fieldName + " (" + unit + ")";
+    }
 }

@@ -17,7 +17,8 @@ public class ClothingTypeDaoImpl implements ClothingTypeDao {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
-            stmt.setString(1, type.getName());
+            // Untuk jenis pakaian sementara, guna nama kosong
+            stmt.setString(1, type.getName() != null ? type.getName() : "");
             stmt.setInt(2, type.getCategoryId());
             stmt.setString(3, type.getDescription());
             stmt.setString(4, type.getCreatedBy());
@@ -81,7 +82,23 @@ public class ClothingTypeDaoImpl implements ClothingTypeDao {
         }
         return null;
     }
-    
+
+    @Override
+    public void updateNameAndDescription(ClothingType type) {
+        String sql = "UPDATE clothing_types SET name = ?, description = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, type.getName());
+            stmt.setString(2, type.getDescription());
+            stmt.setInt(3, type.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Gagal mengemaskini nama jenis pakaian", e);
+        }
+    }
+
     @Override
     public boolean delete(int id) {
         String sql = "DELETE FROM clothing_types WHERE id = ?";

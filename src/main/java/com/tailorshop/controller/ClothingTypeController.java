@@ -3,13 +3,15 @@ package com.tailorshop.controller;
 
 import com.tailorshop.dao.ClothingTypeDao;
 import com.tailorshop.DaoImpl.ClothingTypeDaoImpl;
+import com.tailorshop.dao.MeasurementFieldDao;
+import com.tailorshop.DaoImpl.MeasurementFieldDaoImpl;
 import com.tailorshop.model.ClothingType;
-import com.tailorshop.model.MeasurementTemplate; // ← TAMBAH INI
 
 import java.util.List;
 
 public class ClothingTypeController {
     private ClothingTypeDao dao = new ClothingTypeDaoImpl();
+    private MeasurementFieldDao mfDao = new MeasurementFieldDaoImpl();
 
     public int saveClothingType(ClothingType type) {
         if (type.getName() == null || type.getName().trim().isEmpty()) {
@@ -19,7 +21,7 @@ public class ClothingTypeController {
             throw new IllegalArgumentException("Kategori tidak sah");
         }
         
-        int id = dao.save(type); // ← Sekarang tiada ralat
+        int id = dao.save(type);
         if (id <= 0) {
             throw new RuntimeException("Gagal menyimpan jenis pakaian");
         }
@@ -34,13 +36,12 @@ public class ClothingTypeController {
         return dao.findById(id);
     }
 
+    public void updateTypeNameAndDescription(ClothingType type) {
+        dao.updateNameAndDescription(type);
+    }
+
     public void initializeDefaultMeasurements(int typeId, int categoryId) {
-        MeasurementTemplateController templateController = new MeasurementTemplateController();
-        List<MeasurementTemplate> templates = templateController.getTemplatesByCategory(categoryId);
-        
-        MeasurementFieldController mfController = new MeasurementFieldController();
-        for (int i = 0; i < templates.size(); i++) {
-            mfController.linkMeasurementToType(typeId, templates.get(i).getId(), true, i + 1);
-        }
+        // Auto-salin template dari type_measurements ke measurement_fields
+        mfDao.initializeFromCategoryTemplate(typeId, categoryId, "B0012026"); // Gantikan dengan current user ID
     }
 }

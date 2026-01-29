@@ -19,7 +19,7 @@ public class Main {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
                 // Jika gagal, biar guna default Java Look and Feel
-                System.err.println("⚠️ Gagal set system look and feel: " + e.getMessage());
+                System.err.println("Gagal set system look and feel: " + e.getMessage());
             }
 
             // Cipta tetingkap utama dan simpan rujukan

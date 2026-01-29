@@ -2,7 +2,6 @@
 package com.tailorshop.dao;
 
 import com.tailorshop.model.MeasurementField;
-
 import java.util.List;
 
 public interface MeasurementFieldDao {
@@ -10,4 +9,5 @@ public interface MeasurementFieldDao {
     List<MeasurementField> findByClothingTypeId(int clothingTypeId);
     boolean delete(int id);
     boolean deleteByClothingTypeId(int clothingTypeId);
+    void initializeFromCategoryTemplate(int clothingTypeId, int categoryId, String createdBy);
 }

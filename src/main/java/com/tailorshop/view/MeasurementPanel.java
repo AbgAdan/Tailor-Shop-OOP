@@ -36,7 +36,7 @@ public class MeasurementPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(StyleUtil.BG_LIGHT);
 
-        JLabel header = new JLabel(" 📏 UKURAN UNTUK: " + clothingTypeName, JLabel.CENTER);
+        JLabel header = new JLabel("UKURAN UNTUK: " + clothingTypeName, JLabel.CENTER);
         header.setFont(StyleUtil.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
         add(header, BorderLayout.NORTH);
@@ -65,7 +65,7 @@ public class MeasurementPanel extends JPanel {
             MeasurementFieldController controller = new MeasurementFieldController();
             measurementFields = controller.getMeasurementFieldsByClothingTypeId(clothingTypeId);
             
-            JPanel formPanel = (JPanel) getComponent(1); // BorderLayout.CENTER
+            JPanel formPanel = (JPanel) getComponent(1);
             formPanel.removeAll();
             fieldInputs.clear();
             

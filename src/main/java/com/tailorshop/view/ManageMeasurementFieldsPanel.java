@@ -2,8 +2,10 @@
 package com.tailorshop.view;
 
 import com.tailorshop.controller.MeasurementFieldController;
+import com.tailorshop.controller.MeasurementTemplateController;
 import com.tailorshop.main.Main;
 import com.tailorshop.model.MeasurementField;
+import com.tailorshop.model.MeasurementTemplate;
 import com.tailorshop.util.StyleUtil;
 
 import javax.swing.*;
@@ -39,7 +41,6 @@ public class ManageMeasurementFieldsPanel extends JPanel {
         header.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
         add(header, BorderLayout.NORTH);
 
-        // Jadual
         String[] columns = {"Nama Medan", "Unit", "Wajib", "Susunan", "Tindakan"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -52,7 +53,6 @@ public class ManageMeasurementFieldsPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Butang
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
         JButton addButton = new JButton("Tambah Medan Ukuran");
         JButton backBtn = new JButton("Kembali");
@@ -85,7 +85,6 @@ public class ManageMeasurementFieldsPanel extends JPanel {
                 tableModel.addRow(row);
             }
 
-            // Tambah aksi padam
             table.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseClicked(java.awt.event.MouseEvent evt) {
                     int row = table.rowAtPoint(evt.getPoint());
@@ -103,79 +102,92 @@ public class ManageMeasurementFieldsPanel extends JPanel {
     }
 
     private void showAddFieldDialog() {
-        JTextField nameField = new JTextField();
-        JTextField unitField = new JTextField("inci");
-        JCheckBox requiredBox = new JCheckBox("Wajib", true);
-        JTextField orderField = new JTextField("0");
-
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Nama Medan Ukuran:"), gbc);
-        gbc.gridx = 1;
-        panel.add(nameField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(new JLabel("Unit (contoh: inci, cm):"), gbc);
-        gbc.gridx = 1;
-        panel.add(unitField, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2;
-        panel.add(new JLabel("Medan Wajib:"), gbc);
-        gbc.gridx = 1;
-        panel.add(requiredBox, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3;
-        panel.add(new JLabel("Susunan Paparan:"), gbc);
-        gbc.gridx = 1;
-        panel.add(orderField, gbc);
-
-        int result = JOptionPane.showConfirmDialog(
-            this,
-            panel,
-            "Tambah Medan Ukuran",
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
-
-        if (result == JOptionPane.OK_OPTION) {
-            String name = nameField.getText().trim();
-            String unit = unitField.getText().trim();
-            boolean required = requiredBox.isSelected();
-            int order = 0;
-
-            if (name.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Nama medan ukuran diperlukan!", "Ralat", JOptionPane.WARNING_MESSAGE);
+        // ✅ Hanya benarkan pilihan dari senarai standard
+        selectFromStandardList();
+    }
+    
+    private void selectFromStandardList() {
+        try {
+            MeasurementTemplateController templateController = new MeasurementTemplateController();
+            List<MeasurementTemplate> templates = templateController.getAllTemplates();
+            
+            if (templates.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Tiada ukuran standard tersedia!", "Ralat", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
-            try {
-                order = Integer.parseInt(orderField.getText().trim());
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Susunan mesti nombor!", "Ralat", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            try {
-                MeasurementField field = new MeasurementField();
-                field.setClothingTypeId(clothingTypeId);
-                field.setFieldName(name);
-                field.setUnit(unit);
-                field.setRequired(required);
-                field.setDisplayOrder(order);
-
-                MeasurementFieldController controller = new MeasurementFieldController();
-                controller.saveMeasurementField(field);
+            
+            JList<MeasurementTemplate> list = new JList<>(templates.toArray(new MeasurementTemplate[0]));
+            list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+            list.setCellRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                    super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    if (value instanceof MeasurementTemplate) {
+                        MeasurementTemplate t = (MeasurementTemplate) value;
+                        setText(t.getFieldName() + " (" + t.getUnit() + ")");
+                    }
+                    return this;
+                }
+            });
+            
+            JScrollPane scrollPane = new JScrollPane(list);
+            scrollPane.setPreferredSize(new Dimension(300, 200));
+            
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                scrollPane,
+                "Pilih Ukuran Standard",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+            );
+            
+            if (result == JOptionPane.OK_OPTION) {
+                List<MeasurementTemplate> selected = list.getSelectedValuesList();
+                for (MeasurementTemplate template : selected) {
+                    saveStandardField(template);
+                }
                 loadMeasurementFields();
                 JOptionPane.showMessageDialog(this, "Medan ukuran berjaya ditambah!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
             }
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal memuatkan senarai ukuran.", "Ralat", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
+    }
+    
+    private void saveStandardField(MeasurementTemplate template) {
+        try {
+            MeasurementField field = new MeasurementField();
+            field.setClothingTypeId(clothingTypeId);
+            field.setBodyMeasurementId(template.getId()); // ✅ int sahaja, tiada null
+            field.setFieldName(template.getFieldName());
+            field.setUnit(template.getUnit());
+            field.setRequired(true);
+            field.setDisplayOrder(getNextOrder());
+            field.setCreatedBy("B0012026"); // Gantikan dengan current user ID sebenar
+            
+            MeasurementFieldController controller = new MeasurementFieldController();
+            controller.saveMeasurementField(field);
+        } catch (Exception ex) {
+            throw new RuntimeException("Gagal simpan medan standard", ex);
+        }
+    }
+    
+    private void createCustomField() {
+        // ✅ TIDAK DIGUNAKAN — sistem hanya benarkan ukuran standard
+        JOptionPane.showMessageDialog(
+            this,
+            "Sistem hanya membenarkan pemilihan ukuran daripada senarai standard.\n" +
+            "Sila gunakan pilihan \"Pilih dari Senarai Standard\" untuk menambah medan ukuran.",
+            "Maklumat",
+            JOptionPane.INFORMATION_MESSAGE
+        );
+        selectFromStandardList();
+    }
+    
+    private int getNextOrder() {
+        return fields.isEmpty() ? 1 : fields.stream().mapToInt(MeasurementField::getDisplayOrder).max().orElse(0) + 1;
     }
 
     private void confirmDelete(int fieldId) {
@@ -189,7 +201,6 @@ public class ManageMeasurementFieldsPanel extends JPanel {
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 MeasurementFieldController controller = new MeasurementFieldController();
-                // Anda perlu tambah method deleteById dalam controller
                 controller.deleteField(fieldId);
                 loadMeasurementFields();
                 JOptionPane.showMessageDialog(this, "Medan ukuran berjaya dipadam!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
@@ -199,9 +210,6 @@ public class ManageMeasurementFieldsPanel extends JPanel {
             }
         }
     }
-
-    // Tambah method deleteField dalam MeasurementFieldController
-    // public void deleteField(int id) { dao.delete(id); }
 
     private void styleButton(JButton btn, Color bgColor) {
         btn.setFont(StyleUtil.BUTTON_FONT);

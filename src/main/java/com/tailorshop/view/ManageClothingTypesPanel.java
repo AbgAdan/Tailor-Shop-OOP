@@ -9,6 +9,7 @@ import com.tailorshop.main.Main;
 import com.tailorshop.model.ClothingType;
 import com.tailorshop.model.ClothingCategory;
 import com.tailorshop.model.MeasurementTemplate;
+import com.tailorshop.model.MeasurementField;
 import com.tailorshop.util.StyleUtil;
 
 import javax.swing.*;
@@ -35,7 +36,7 @@ public class ManageClothingTypesPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(StyleUtil.BG_LIGHT);
 
-        JLabel header = new JLabel(" 👔 UNTUK PENGURUSAN JENIS PAKAIAN", JLabel.CENTER);
+        JLabel header = new JLabel("UNTUK PENGURUSAN JENIS PAKAIAN", JLabel.CENTER);
         header.setFont(StyleUtil.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
         add(header, BorderLayout.NORTH);
@@ -178,7 +179,7 @@ public class ManageClothingTypesPanel extends JPanel {
             ClothingTypeController typeController = new ClothingTypeController();
             int typeId = typeController.saveClothingType(type);
             
-            selectAndLinkMeasurements(typeId);
+            saveSelectedMeasurementsToFields(typeId);
             
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Ralat: " + ex.getMessage(), "Ralat", JOptionPane.ERROR_MESSAGE);
@@ -252,7 +253,7 @@ public class ManageClothingTypesPanel extends JPanel {
         }
     }
 
-    private void selectAndLinkMeasurements(int typeId) {
+    private void saveSelectedMeasurementsToFields(int typeId) {
         try {
             MeasurementTemplateController templateController = new MeasurementTemplateController();
             List<MeasurementTemplate> allTemplates = templateController.getAllTemplates();
@@ -292,7 +293,16 @@ public class ManageClothingTypesPanel extends JPanel {
                 List<MeasurementTemplate> selected = list.getSelectedValuesList();
                 for (int i = 0; i < selected.size(); i++) {
                     MeasurementTemplate template = selected.get(i);
-                    mfController.linkMeasurementToType(typeId, template.getId(), true, i + 1);
+                    
+                    MeasurementField field = new MeasurementField();
+                    field.setClothingTypeId(typeId);
+                    field.setBodyMeasurementId(template.getId()); // ✅ BETUL: setBodyMeasurementId
+                    field.setFieldName(template.getFieldName());
+                    field.setUnit(template.getUnit());
+                    field.setRequired(true);
+                    field.setDisplayOrder(i + 1);
+                    
+                    mfController.saveMeasurementField(field);
                 }
                 
                 navigateTo(new ManageMeasurementFieldsPanel(typeId, "Jenis Baharu", () -> 
