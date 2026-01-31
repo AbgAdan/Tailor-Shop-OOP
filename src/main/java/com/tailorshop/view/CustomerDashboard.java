@@ -73,15 +73,23 @@ public class CustomerDashboard extends JPanel {
             ));
 
             if ("Urus Ahli Keluarga".equals(item)) {
+                // ✅ BETUL: Tambah parameter userRole sebagai "CUSTOMER"
                 btn.addActionListener(e -> navigateTo(
-                    new FamilyMemberPanel(currentUserId, userName, () -> 
-                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
+                    new FamilyMemberPanel(
+                        currentUserId, 
+                        userName, 
+                        "CUSTOMER", // ✅ Parameter ke-3: userRole
+                        () -> navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
                     )
                 ));
             } else if ("Profil Saya".equals(item)) {
                 btn.addActionListener(e -> navigateTo(
-                    new ProfailPanel(currentUserId, "CUSTOMER", userName, userEmail, () -> 
-                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
+                    new ProfailPanel(
+                        currentUserId, 
+                        "CUSTOMER", 
+                        userName, 
+                        userEmail, 
+                        () -> navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
                     )
                 ));
             } else {

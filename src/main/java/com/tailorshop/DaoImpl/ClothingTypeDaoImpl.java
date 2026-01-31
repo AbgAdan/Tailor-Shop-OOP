@@ -13,45 +13,56 @@ public class ClothingTypeDaoImpl implements ClothingTypeDao {
 
     @Override
     public int save(ClothingType type) {
-        String sql = "INSERT INTO clothing_types (name, category_id, description, created_by) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO clothing_types (name, gender, category_id, description, created_by) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, type.getName());
+            stmt.setString(2, type.getGender());
             
-            // Untuk jenis pakaian sementara, guna nama kosong
-            stmt.setString(1, type.getName() != null ? type.getName() : "");
-            stmt.setInt(2, type.getCategoryId());
-            stmt.setString(3, type.getDescription());
-            stmt.setString(4, type.getCreatedBy());
+            if (type.getCategoryId() > 0) {
+                stmt.setInt(3, type.getCategoryId());
+            } else {
+                stmt.setNull(3, Types.INTEGER);
+            }
             
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
+            stmt.setString(4, type.getDescription());
+            stmt.setString(5, type.getCreatedBy());
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
             }
-            return -1;
         } catch (SQLException e) {
             e.printStackTrace();
-            return -1;
         }
+        return -1;
     }
 
     @Override
     public List<ClothingType> getAll() {
-        String sql = "SELECT id, name, category_id, description, created_by FROM clothing_types ORDER BY name";
         List<ClothingType> types = new ArrayList<>();
+        String sql = "SELECT id, name, gender, category_id, description, created_by FROM clothing_types";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 ClothingType type = new ClothingType();
                 type.setId(rs.getInt("id"));
                 type.setName(rs.getString("name"));
-                type.setCategoryId(rs.getInt("category_id"));
+                type.setGender(rs.getString("gender"));
+                
+                if (rs.getObject("category_id") != null) {
+                    type.setCategoryId(rs.getInt("category_id"));
+                } else {
+                    type.setCategoryId(0);
+                }
+                
                 type.setDescription(rs.getString("description"));
                 type.setCreatedBy(rs.getString("created_by"));
+                
                 types.add(type);
             }
         } catch (SQLException e) {
@@ -62,19 +73,26 @@ public class ClothingTypeDaoImpl implements ClothingTypeDao {
 
     @Override
     public ClothingType findById(int id) {
-        String sql = "SELECT id, name, category_id, description, created_by FROM clothing_types WHERE id = ?";
+        String sql = "SELECT id, name, gender, category_id, description, created_by FROM clothing_types WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 ClothingType type = new ClothingType();
                 type.setId(rs.getInt("id"));
                 type.setName(rs.getString("name"));
-                type.setCategoryId(rs.getInt("category_id"));
+                type.setGender(rs.getString("gender"));
+                
+                if (rs.getObject("category_id") != null) {
+                    type.setCategoryId(rs.getInt("category_id"));
+                } else {
+                    type.setCategoryId(0);
+                }
+                
                 type.setDescription(rs.getString("description"));
                 type.setCreatedBy(rs.getString("created_by"));
+                
                 return type;
             }
         } catch (SQLException e) {
@@ -84,18 +102,26 @@ public class ClothingTypeDaoImpl implements ClothingTypeDao {
     }
 
     @Override
-    public void updateNameAndDescription(ClothingType type) {
-        String sql = "UPDATE clothing_types SET name = ?, description = ? WHERE id = ?";
+    public boolean update(ClothingType type) {
+        String sql = "UPDATE clothing_types SET name = ?, gender = ?, category_id = ?, description = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
             stmt.setString(1, type.getName());
-            stmt.setString(2, type.getDescription());
-            stmt.setInt(3, type.getId());
-            stmt.executeUpdate();
+            stmt.setString(2, type.getGender());
+            
+            if (type.getCategoryId() > 0) {
+                stmt.setInt(3, type.getCategoryId());
+            } else {
+                stmt.setNull(3, Types.INTEGER);
+            }
+            
+            stmt.setString(4, type.getDescription());
+            stmt.setInt(5, type.getId());
+            
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException("Gagal mengemaskini nama jenis pakaian", e);
+            return false;
         }
     }
 
@@ -110,5 +136,21 @@ public class ClothingTypeDaoImpl implements ClothingTypeDao {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public int getCategoryIdByName(String categoryName) {
+        String sql = "SELECT id FROM clothing_categories WHERE name = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, categoryName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }

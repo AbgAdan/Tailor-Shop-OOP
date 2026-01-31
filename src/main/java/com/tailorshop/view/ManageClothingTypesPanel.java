@@ -37,12 +37,13 @@ public class ManageClothingTypesPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(StyleUtil.BG_LIGHT);
 
-        JLabel header = new JLabel("UNTUK PENGURUSAN JENIS PAKAIAN", JLabel.CENTER);
+        JLabel header = new JLabel("PENGURUSAN JENIS PAKAIAN", JLabel.CENTER);
         header.setFont(StyleUtil.TITLE_FONT);
         header.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 20));
         add(header, BorderLayout.NORTH);
 
-        String[] columns = {"Nama Jenis", "Kategori", "Penerangan", "Tindakan"};
+        // Tambah lajur "Jantina"
+        String[] columns = {"Nama Jenis", "Jantina", "Kategori", "Penerangan", "Tindakan"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -86,9 +87,11 @@ public class ManageClothingTypesPanel extends JPanel {
 
             for (ClothingType type : types) {
                 String categoryName = categoryMap.getOrDefault(type.getCategoryId(), "Tidak Diketahui");
+                String genderDisplay = type.getGender() != null ? type.getGender() : "Unisex";
 
                 Object[] row = {
                     type.getName(),
+                    genderDisplay,
                     categoryName,
                     type.getDescription() != null ? type.getDescription() : "",
                     "Urus Ukuran"
@@ -96,11 +99,12 @@ public class ManageClothingTypesPanel extends JPanel {
                 tableModel.addRow(row);
             }
 
+            // Update index tindakan ke column 4 (selepas tambah "Jantina")
             table.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseClicked(java.awt.event.MouseEvent evt) {
                     int row = table.rowAtPoint(evt.getPoint());
                     int col = table.columnAtPoint(evt.getPoint());
-                    if (col == 3 && row >= 0) {
+                    if (col == 4 && row >= 0) { // Column "Tindakan" sekarang di index 4
                         ClothingType selected = types.get(row);
                         navigateTo(new ManageMeasurementFieldsPanel(selected.getId(), selected.getName(), () -> 
                             navigateTo(new ManageClothingTypesPanel(currentUserId, onBack))
@@ -147,7 +151,6 @@ public class ManageClothingTypesPanel extends JPanel {
     }
 
     private void handleCreateNewCategory() {
-        // Langkah 1: Masukkan nama kategori baharu
         String newCategoryName = JOptionPane.showInputDialog(
             this,
             "Masukkan nama kategori baharu:",
@@ -160,7 +163,6 @@ public class ManageClothingTypesPanel extends JPanel {
         }
 
         try {
-            // Langkah 2: Simpan kategori baharu
             ClothingCategory newCategory = new ClothingCategory();
             newCategory.setName(newCategoryName.trim());
             newCategory.setCreatedBy(currentUserId);
@@ -168,12 +170,12 @@ public class ManageClothingTypesPanel extends JPanel {
             ClothingCategoryController catController = new ClothingCategoryController();
             int categoryId = catController.saveCategory(newCategory);
             
-            // Langkah 3: PAPAR DIALOG PILIH UKURAN DAHULU (Gambar 2)
             List<MeasurementTemplate> selectedTemplates = selectMeasurementsFromList();
-            if (selectedTemplates == null) return; // Pengguna klik Cancel
+            if (selectedTemplates == null) return;
             
-            // Langkah 4: PAPAR DIALOG INPUT JENIS PAKAIAN (Gambar 1)
+            // ✅ FORM INPUT DENGAN JANTINA
             JTextField nameField = new JTextField(25);
+            JComboBox<String> genderCombo = new JComboBox<>(new String[]{"Lelaki", "Perempuan", "Unisex"});
             JTextArea descArea = new JTextArea(2, 25);
             descArea.setLineWrap(true);
             descArea.setWrapStyleWord(true);
@@ -189,6 +191,11 @@ public class ManageClothingTypesPanel extends JPanel {
             panel.add(nameField, gbc);
 
             gbc.gridx = 0; gbc.gridy = 1;
+            panel.add(new JLabel("Jantina:"), gbc);
+            gbc.gridx = 1;
+            panel.add(genderCombo, gbc);
+
+            gbc.gridx = 0; gbc.gridy = 2;
             panel.add(new JLabel("Penerangan (Opsional):"), gbc);
             gbc.gridx = 1;
             JScrollPane descScroll = new JScrollPane(descArea);
@@ -206,6 +213,7 @@ public class ManageClothingTypesPanel extends JPanel {
             if (result != JOptionPane.OK_OPTION) return;
 
             String typeName = nameField.getText().trim();
+            String gender = (String) genderCombo.getSelectedItem();
             String desc = descArea.getText().trim();
 
             if (typeName.isEmpty()) {
@@ -213,9 +221,9 @@ public class ManageClothingTypesPanel extends JPanel {
                 return;
             }
 
-            // Langkah 5: Simpan jenis pakaian
             ClothingType type = new ClothingType();
             type.setName(typeName.trim());
+            type.setGender(gender);
             type.setCategoryId(categoryId);
             type.setDescription(desc.isEmpty() ? null : desc);
             type.setCreatedBy(currentUserId);
@@ -223,7 +231,6 @@ public class ManageClothingTypesPanel extends JPanel {
             ClothingTypeController typeController = new ClothingTypeController();
             int typeId = typeController.saveClothingType(type);
             
-            // Langkah 6: Simpan medan ukuran yang dipilih
             saveSelectedMeasurementsToFields(typeId, selectedTemplates, currentUserId);
             
         } catch (Exception ex) {
@@ -233,7 +240,9 @@ public class ManageClothingTypesPanel extends JPanel {
     }
 
     private void handleCreateWithType(String categoryName) {
+        // ✅ FORM INPUT DENGAN JANTINA
         JTextField nameField = new JTextField(25);
+        JComboBox<String> genderCombo = new JComboBox<>(new String[]{"Lelaki", "Perempuan", "Unisex"});
         JTextArea descArea = new JTextArea(2, 25);
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
@@ -249,6 +258,11 @@ public class ManageClothingTypesPanel extends JPanel {
         panel.add(nameField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Jantina:"), gbc);
+        gbc.gridx = 1;
+        panel.add(genderCombo, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2;
         panel.add(new JLabel("Penerangan (Opsional):"), gbc);
         gbc.gridx = 1;
         JScrollPane descScroll = new JScrollPane(descArea);
@@ -265,6 +279,7 @@ public class ManageClothingTypesPanel extends JPanel {
 
         if (result == JOptionPane.OK_OPTION) {
             String name = nameField.getText().trim();
+            String gender = (String) genderCombo.getSelectedItem();
             String desc = descArea.getText().trim();
 
             if (name.isEmpty()) {
@@ -278,6 +293,7 @@ public class ManageClothingTypesPanel extends JPanel {
                 
                 ClothingType type = new ClothingType();
                 type.setName(name);
+                type.setGender(gender);
                 type.setCategoryId(categoryId);
                 type.setDescription(desc.isEmpty() ? null : desc);
                 type.setCreatedBy(currentUserId);
@@ -299,63 +315,60 @@ public class ManageClothingTypesPanel extends JPanel {
     }
 
     private List<MeasurementTemplate> selectMeasurementsFromList() {
-    try {
-        MeasurementTemplateController templateController = new MeasurementTemplateController();
-        List<MeasurementTemplate> allTemplates = templateController.getAllTemplates();
-        
-        if (allTemplates.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tiada jenis ukuran tersedia!", "Ralat", JOptionPane.WARNING_MESSAGE);
-            return null;
-        }
-        
-        // Panel utama untuk checkbox
-        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        List<JCheckBox> checkBoxes = new ArrayList<>();
-        for (MeasurementTemplate template : allTemplates) {
-            JCheckBox cb = new JCheckBox(template.getFieldName() + " (" + template.getUnit() + ")");
-            cb.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            checkBoxes.add(cb);
-            panel.add(cb);
-        }
-        
-        JScrollPane scrollPane = new JScrollPane(panel);
-        scrollPane.setPreferredSize(new Dimension(350, 300));
-        
-        int result = JOptionPane.showConfirmDialog(
-            this,
-            scrollPane,
-            "Pilih Jenis Ukuran untuk Kategori Baharu",
-            JOptionPane.OK_CANCEL_OPTION,
-            JOptionPane.PLAIN_MESSAGE
-        );
-        
-        if (result == JOptionPane.OK_OPTION) {
-            // Kumpulkan yang dipilih
-            List<MeasurementTemplate> selected = new ArrayList<>();
-            for (int i = 0; i < checkBoxes.size(); i++) {
-                if (checkBoxes.get(i).isSelected()) {
-                    selected.add(allTemplates.get(i));
+        try {
+            MeasurementTemplateController templateController = new MeasurementTemplateController();
+            List<MeasurementTemplate> allTemplates = templateController.getAllTemplates();
+            
+            if (allTemplates.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Tiada jenis ukuran tersedia!", "Ralat", JOptionPane.WARNING_MESSAGE);
+                return null;
+            }
+            
+            JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+            panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            
+            List<JCheckBox> checkBoxes = new ArrayList<>();
+            for (MeasurementTemplate template : allTemplates) {
+                JCheckBox cb = new JCheckBox(template.getFieldName() + " (" + template.getUnit() + ")");
+                cb.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                checkBoxes.add(cb);
+                panel.add(cb);
+            }
+            
+            JScrollPane scrollPane = new JScrollPane(panel);
+            scrollPane.setPreferredSize(new Dimension(350, 300));
+            
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                scrollPane,
+                "Pilih Jenis Ukuran untuk Kategori Baharu",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+            );
+            
+            if (result == JOptionPane.OK_OPTION) {
+                List<MeasurementTemplate> selected = new ArrayList<>();
+                for (int i = 0; i < checkBoxes.size(); i++) {
+                    if (checkBoxes.get(i).isSelected()) {
+                        selected.add(allTemplates.get(i));
+                    }
                 }
+                
+                if (selected.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Sila pilih sekurang-kurangnya satu ukuran!", "Amaran", JOptionPane.WARNING_MESSAGE);
+                    return selectMeasurementsFromList();
+                }
+                
+                return selected;
             }
             
-            if (selected.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Sila pilih sekurang-kurangnya satu ukuran!", "Amaran", JOptionPane.WARNING_MESSAGE);
-                return selectMeasurementsFromList(); // Ulang
-            }
-            
-            return selected;
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal memuatkan senarai ukuran.", "Ralat", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
-        
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Gagal memuatkan senarai ukuran.", "Ralat", JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
+        return null;
     }
-    return null;
-}
 
-    // ✅ METHOD DIKEMAS
     private void saveSelectedMeasurementsToFields(int typeId, List<MeasurementTemplate> selected, String currentUserId) {
         try {
             MeasurementFieldController mfController = new MeasurementFieldController();
@@ -374,7 +387,6 @@ public class ManageClothingTypesPanel extends JPanel {
                 mfController.saveMeasurementField(field);
             }
             
-            // Navigasi
             navigateTo(new ManageMeasurementFieldsPanel(typeId, "Jenis Baharu", () -> 
                 navigateTo(new ManageClothingTypesPanel(currentUserId, onBack))
             ));

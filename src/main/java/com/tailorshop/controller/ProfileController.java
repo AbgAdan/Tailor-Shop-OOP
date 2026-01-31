@@ -52,7 +52,15 @@ public class ProfileController {
                 if (userName == null || userName.trim().isEmpty()) {
                     throw new RuntimeException("Nama pengguna tidak dijumpai");
                 }
-                FamilyMember mainUser = new FamilyMember(userId, userName, gender, birthDate, true);
+                
+                // ✅ Guna setter untuk elak ralat constructor
+                FamilyMember mainUser = new FamilyMember();
+                mainUser.setCustomerId(userId);
+                mainUser.setName(userName);
+                mainUser.setGender(gender);
+                mainUser.setBirthDate(birthDate.toString()); // LocalDate → String
+                mainUser.setMainUser(true);
+                
                 if (!familyMemberDao.save(mainUser)) {
                     throw new RuntimeException("Gagal menyimpan ahli keluarga utama");
                 }
