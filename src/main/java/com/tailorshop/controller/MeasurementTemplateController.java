@@ -1,33 +1,38 @@
 // com.tailorshop.controller.MeasurementTemplateController.java
 package com.tailorshop.controller;
 
-import com.tailorshop.dao.MeasurementTemplateDao;
-import com.tailorshop.DaoImpl.MeasurementTemplateDaoImpl;
 import com.tailorshop.model.MeasurementTemplate;
+import com.tailorshop.util.DatabaseConnection;
 
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MeasurementTemplateController {
-    private MeasurementTemplateDao dao = new MeasurementTemplateDaoImpl();
 
+    /**
+     * Dapatkan semua ukuran aktif dari body_measurements
+     */
     public List<MeasurementTemplate> getAllTemplates() {
-        return dao.getAllActive();
-    }
-
-    public List<MeasurementTemplate> getTemplatesByCategory(int categoryId) {
-        // Untuk kesederhanaan, kembalikan semua ukuran
-        // Anda boleh tambah logik khusus mengikut kategori
-        return getAllTemplates();
-    }
-
-    public int saveTemplate(MeasurementTemplate template) {
-        if (template.getFieldName() == null || template.getFieldName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Nama medan ukuran diperlukan");
+        String sql = "SELECT id, name, unit FROM body_measurements WHERE is_active = 1 ORDER BY name";
+        List<MeasurementTemplate> templates = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                MeasurementTemplate template = new MeasurementTemplate();
+                template.setId(rs.getInt("id"));
+                template.setFieldName(rs.getString("name")); // ✅ GUNA 'name'
+                template.setUnit(rs.getString("unit"));     // ✅ GUNA 'unit'
+                templates.add(template);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Gagal memuatkan senarai ukuran", e);
         }
-        int id = dao.save(template);
-        if (id <= 0) {
-            throw new RuntimeException("Gagal menyimpan medan ukuran");
-        }
-        return id;
+        
+        return templates;
     }
 }

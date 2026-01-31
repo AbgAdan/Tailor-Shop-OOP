@@ -30,7 +30,7 @@ public class PersonPanel extends JPanel {
         header.setBackground(StyleUtil.CUSTOMER_COLOR);
         header.setPreferredSize(new Dimension(0, 60));
 
-        JLabel title = new JLabel("👥 DAFTAR ORANG LAIN", JLabel.LEFT);
+        JLabel title = new JLabel("DAFTAR ORANG LAIN", JLabel.LEFT);
         title.setFont(StyleUtil.TITLE_FONT);
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
@@ -60,7 +60,7 @@ public class PersonPanel extends JPanel {
         try {
             String ownerName = getCustomerName(currentCustomerEmail);
             if (ownerName != null) {
-                JPanel ownerPanel = createPersonPanel("👤 Pemilik Akaun", ownerName, "-", "-");
+                JPanel ownerPanel = createPersonPanel("Pemilik Akaun", ownerName, "-", "-");
                 ownerPanel.setBorder(BorderFactory.createTitledBorder("Pemilik Akaun"));
                 mainPanel.add(ownerPanel);
                 mainPanel.add(Box.createVerticalStrut(20));
