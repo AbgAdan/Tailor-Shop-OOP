@@ -11,6 +11,8 @@ public class FamilyMember {
     private String gender;
     private String birthDate; // format: "yyyy-MM-dd"
     private boolean isMainUser;
+    private boolean managedByTailor; // ✅ BARU
+    private String tailorId;         // ✅ BARU
 
     // Constructor kosong
     public FamilyMember() {}
@@ -22,16 +24,21 @@ public class FamilyMember {
         this.gender = gender;
         this.birthDate = birthDate;
         this.isMainUser = isMainUser;
+        this.managedByTailor = false; // default
+        this.tailorId = null;
     }
 
     // Constructor penuh
-    public FamilyMember(int id, String customerId, String name, String gender, String birthDate, boolean isMainUser) {
+    public FamilyMember(int id, String customerId, String name, String gender, String birthDate, 
+                      boolean isMainUser, boolean managedByTailor, String tailorId) {
         this.id = id;
         this.customerId = customerId;
         this.name = name;
         this.gender = gender;
         this.birthDate = birthDate;
         this.isMainUser = isMainUser;
+        this.managedByTailor = managedByTailor;
+        this.tailorId = tailorId;
     }
 
     // Getter & Setter
@@ -52,6 +59,13 @@ public class FamilyMember {
 
     public boolean isMainUser() { return isMainUser; }
     public void setMainUser(boolean mainUser) { isMainUser = mainUser; }
+
+    // ✅ GETTER & SETTER BARU
+    public boolean isManagedByTailor() { return managedByTailor; }
+    public void setManagedByTailor(boolean managedByTailor) { this.managedByTailor = managedByTailor; }
+
+    public String getTailorId() { return tailorId; }
+    public void setTailorId(String tailorId) { this.tailorId = tailorId; }
 
     // Helper method untuk kira umur
     public int getAge() {
@@ -76,6 +90,8 @@ public class FamilyMember {
                 ", gender='" + gender + '\'' +
                 ", birthDate='" + birthDate + '\'' +
                 ", isMainUser=" + isMainUser +
+                ", managedByTailor=" + managedByTailor +
+                ", tailorId='" + tailorId + '\'' +
                 '}';
     }
 }

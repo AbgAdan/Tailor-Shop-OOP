@@ -111,7 +111,7 @@ public class LoginPanel extends JPanel {
     private JPanel createDashboard(String role, String userId, Runnable onLogout, User user) {
         switch (role) {
             case "CUSTOMER":
-                return new CustomerDashboard(onLogout, userId, user.getName(), user.getEmail());
+                return new CustomerDashboard(onLogout, userId, user.getName());
             case "TAILOR":
                 return new TailorDashboard(onLogout, userId, user.getName(), user.getEmail());
             case "BOSS":

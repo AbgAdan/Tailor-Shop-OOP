@@ -12,7 +12,7 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
 
     @Override
     public List<FamilyMember> findByCustomerId(String customerId) {
-        String sql = "SELECT id, customer_id, name, gender, birth_date, is_main_user FROM family_members WHERE customer_id = ? ORDER BY is_main_user DESC, name";
+        String sql = "SELECT id, customer_id, name, gender, birth_date, is_main_user, managed_by_tailor, tailor_id FROM family_members WHERE customer_id = ? ORDER BY is_main_user DESC, name";
         List<FamilyMember> members = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -25,7 +25,9 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
                     rs.getString("name"),
                     rs.getString("gender"),
                     rs.getDate("birth_date").toString(),
-                    rs.getBoolean("is_main_user")
+                    rs.getBoolean("is_main_user"),
+                    rs.getBoolean("managed_by_tailor"),
+                    rs.getString("tailor_id")
                 );
                 members.add(member);
             }
@@ -37,7 +39,7 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
 
     @Override
     public boolean save(FamilyMember member) {
-        String sql = "INSERT INTO family_members (customer_id, name, gender, birth_date, is_main_user) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO family_members (customer_id, name, gender, birth_date, is_main_user, managed_by_tailor, tailor_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, member.getCustomerId());
@@ -45,6 +47,8 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
             stmt.setString(3, member.getGender());
             stmt.setDate(4, java.sql.Date.valueOf(member.getBirthDate()));
             stmt.setBoolean(5, member.isMainUser());
+            stmt.setBoolean(6, member.isManagedByTailor());
+            stmt.setString(7, member.getTailorId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -54,13 +58,15 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
 
     @Override
     public boolean update(FamilyMember member) {
-        String sql = "UPDATE family_members SET name = ?, gender = ?, birth_date = ? WHERE id = ?";
+        String sql = "UPDATE family_members SET name = ?, gender = ?, birth_date = ?, managed_by_tailor = ?, tailor_id = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, member.getName());
             stmt.setString(2, member.getGender());
             stmt.setDate(3, java.sql.Date.valueOf(member.getBirthDate()));
-            stmt.setInt(4, member.getId());
+            stmt.setBoolean(4, member.isManagedByTailor());
+            stmt.setString(5, member.getTailorId());
+            stmt.setInt(6, member.getId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -99,7 +105,7 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
 
     @Override
     public FamilyMember findMainUserByCustomerId(String customerId) {
-        String sql = "SELECT id, customer_id, name, gender, birth_date, is_main_user FROM family_members WHERE customer_id = ? AND is_main_user = 1";
+        String sql = "SELECT id, customer_id, name, gender, birth_date, is_main_user, managed_by_tailor, tailor_id FROM family_members WHERE customer_id = ? AND is_main_user = 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, customerId);
@@ -111,7 +117,9 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
                     rs.getString("name"),
                     rs.getString("gender"),
                     rs.getDate("birth_date").toString(),
-                    rs.getBoolean("is_main_user")
+                    rs.getBoolean("is_main_user"),
+                    rs.getBoolean("managed_by_tailor"),
+                    rs.getString("tailor_id")
                 );
             }
         } catch (SQLException e) {
@@ -143,7 +151,6 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
         List<String> types = new ArrayList<>();
         
         if (memberGender == null || memberGender.trim().isEmpty()) {
-            // Jika jantina tidak tentu, tunjuk semua
             return getAllClothingTypeNames();
         }
         
@@ -153,7 +160,6 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
         } else if ("Perempuan".equals(memberGender)) {
             sql = "SELECT name FROM clothing_types WHERE gender IN ('Perempuan', 'Unisex') ORDER BY name";
         } else {
-            // Jika jantina lain, tunjuk semua
             sql = "SELECT name FROM clothing_types ORDER BY name";
         }
         
@@ -174,17 +180,14 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
         Map<String, String> measurements = new LinkedHashMap<>();
         
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Dapatkan semua ukuran asas dari body_measurements
             String templateSql = "SELECT name FROM body_measurements ORDER BY name";
             PreparedStatement templateStmt = conn.prepareStatement(templateSql);
             ResultSet templateRs = templateStmt.executeQuery();
             
             while (templateRs.next()) {
-                // Tunjuk "0" jika tiada nilai
                 measurements.put(templateRs.getString("name"), "0");
             }
             
-            // Gantikan dengan nilai sebenar jika ada
             String dataSql = "SELECT measurement_data FROM measurements WHERE family_member_id = ? AND clothing_type_id = 0";
             PreparedStatement dataStmt = conn.prepareStatement(dataSql);
             dataStmt.setInt(1, memberId);
@@ -213,7 +216,6 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
         Map<String, String> result = new LinkedHashMap<>();
         
         try (Connection conn = DatabaseConnection.getConnection()) {
-            // Dapatkan template dengan JOIN ke body_measurements
             String templateSql = "SELECT bm.name as field_name FROM measurement_fields mf " +
                                "JOIN body_measurements bm ON mf.body_measurement_id = bm.id " +
                                "WHERE mf.clothing_type_id = ? ORDER BY mf.display_order";
@@ -225,16 +227,13 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
             while (templateRs.next()) {
                 String fieldName = templateRs.getString("field_name");
                 templateFields.add(fieldName);
-                // Tunjuk "0" jika tiada nilai
                 result.put(fieldName, "0");
             }
             
             if (templateFields.isEmpty()) {
-                // Tiada template - fallback ke semua ukuran asas
                 return getBasicBodyMeasurements(memberId);
             }
             
-            // Dapatkan nilai sebenar dari measurements
             String dataSql = "SELECT measurement_data FROM measurements WHERE family_member_id = ? AND clothing_type_id = ?";
             PreparedStatement dataStmt = conn.prepareStatement(dataSql);
             dataStmt.setInt(1, memberId);
@@ -249,7 +248,6 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
                         if (actualMeasurements.containsKey(fieldName)) {
                             result.put(fieldName, actualMeasurements.get(fieldName));
                         }
-                        // Jika tidak ada dalam JSON, kekal "0"
                     }
                 }
             }
@@ -279,7 +277,6 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
 
     @Override
     public boolean updateMeasurementsByTemplate(int memberId, int clothingTypeId, Map<String, String> measurements) {
-        // Semak jika rekod sedia ada
         String checkSql = "SELECT id FROM measurements WHERE family_member_id = ? AND clothing_type_id = ?";
         int measurementId = -1;
         
@@ -296,11 +293,9 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
             return false;
         }
 
-        // Convert Map ke JSON string
         String jsonData = mapToJson(measurements);
 
         if (measurementId > 0) {
-            // Update rekod sedia ada
             String updateSql = "UPDATE measurements SET measurement_data = ? WHERE id = ?";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
@@ -312,7 +307,6 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
                 return false;
             }
         } else {
-            // Insert rekod baharu
             String insertSql = "INSERT INTO measurements (family_member_id, clothing_type_id, measurement_data) VALUES (?, ?, ?)";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
@@ -325,6 +319,51 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
                 return false;
             }
         }
+    }
+
+    // ✅ METHOD BARU UNTUK KEWENANGAN TAILOR
+    @Override
+    public boolean grantTailorAccess(int familyMemberId, String tailorId) {
+        String sql = "UPDATE family_members SET managed_by_tailor = TRUE, tailor_id = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, tailorId);
+            stmt.setInt(2, familyMemberId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean revokeTailorAccess(int familyMemberId) {
+        String sql = "UPDATE family_members SET managed_by_tailor = FALSE, tailor_id = NULL WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, familyMemberId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isTailorAuthorized(int familyMemberId, String tailorId) {
+        String sql = "SELECT COUNT(*) FROM family_members WHERE id = ? AND managed_by_tailor = TRUE AND tailor_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, familyMemberId);
+            stmt.setString(2, tailorId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     // ✅ HELPER METHODS UNTUK JSON (MANUAL)

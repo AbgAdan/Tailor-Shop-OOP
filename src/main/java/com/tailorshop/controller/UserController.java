@@ -1,9 +1,11 @@
-// com.tailorshop.controller.UserController
+// com.tailorshop.controller.UserController.java
 package com.tailorshop.controller;
 
 import com.tailorshop.dao.UserDao;
 import com.tailorshop.DaoImpl.UserDaoImpl;
 import com.tailorshop.model.User;
+
+import java.util.List;
 
 public class UserController {
     private UserDao userDao = new UserDaoImpl();
@@ -65,5 +67,15 @@ public class UserController {
 
     private boolean isValidRole(String role) {
         return "CUSTOMER".equals(role) || "TAILOR".equals(role) || "BOSS".equals(role);
+    }
+    
+    // ✅ METHOD BARU: DAPATKAN SEMUA PELANGGAN
+    public List<User> getAllCustomers() {
+        return userDao.getAllCustomers(); // ✅ BETUL - guna userDao
+    }
+    
+    // ✅ METHOD BARU: DAPATKAN SEMUA TAILOR
+    public List<User> getAllTailors() {
+        return userDao.getAllTailors(); // ✅ TAMBAH INI
     }
 }

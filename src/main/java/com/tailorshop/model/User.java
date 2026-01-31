@@ -1,4 +1,4 @@
-// com.tailorshop.model.User
+// com.tailorshop.model.User.java
 package com.tailorshop.model;
 
 public class User {
@@ -7,9 +7,20 @@ public class User {
     private String email;
     private String password;
     private String role;
-    private String registeredBy; // ← field baru
+    private String registeredBy; // ID pengguna yang mendaftarkan
 
-    // Constructor penuh
+    // Constructor kosong
+    public User() {}
+
+    // Constructor untuk register (ID akan dijana dalam DAO)
+    public User(String name, String email, String password, String role) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
+
+    // Constructor penuh (untuk load dari database)
     public User(String id, String name, String email, String password, String role, String registeredBy) {
         this.id = id;
         this.name = name;
@@ -17,11 +28,6 @@ public class User {
         this.password = password;
         this.role = role;
         this.registeredBy = registeredBy;
-    }
-
-    // Constructor untuk pendaftaran biasa
-    public User(String name, String email, String password, String role) {
-        this(null, name, email, password, role, null);
     }
 
     // Getter & Setter
@@ -40,7 +46,16 @@ public class User {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    // 🔑 Getter & Setter untuk registeredBy
     public String getRegisteredBy() { return registeredBy; }
     public void setRegisteredBy(String registeredBy) { this.registeredBy = registeredBy; }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", role='" + role + '\'' +
+                '}';
+    }
 }

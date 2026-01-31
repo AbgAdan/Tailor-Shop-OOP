@@ -79,8 +79,12 @@ public class TailorDashboard extends JPanel {
                     )
                 ));
             } else if ("Lihat Ukuran Pelanggan".equals(item)) {
-                // Tailor boleh lihat ukuran pelanggan
-                btn.addActionListener(e -> showFeatureNotReady("Lihat Ukuran Pelanggan"));
+                // ✅ AKTIFKAN FUNGSI SEBENAR
+                btn.addActionListener(e -> navigateTo(
+                    new TailorCustomerPanel(currentUserId, () -> 
+                        navigateTo(new TailorDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
             } else {
                 btn.addActionListener(e -> showFeatureNotReady(item));
             }

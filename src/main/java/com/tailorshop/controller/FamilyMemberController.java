@@ -63,4 +63,17 @@ public class FamilyMemberController {
     public boolean updateMeasurementsByTemplate(int memberId, int clothingTypeId, Map<String, String> measurements) {
         return dao.updateMeasurementsByTemplate(memberId, clothingTypeId, measurements);
     }
+
+    // ✅ METHOD BARU: KEWENANGAN TAILOR
+    public boolean grantTailorAccess(int familyMemberId, String tailorId) {
+        return dao.grantTailorAccess(familyMemberId, tailorId);
+    }
+
+    public boolean revokeTailorAccess(int familyMemberId) {
+        return dao.revokeTailorAccess(familyMemberId);
+    }
+
+    public boolean isTailorAuthorized(int familyMemberId, String tailorId) {
+        return dao.isTailorAuthorized(familyMemberId, tailorId);
+    }
 }

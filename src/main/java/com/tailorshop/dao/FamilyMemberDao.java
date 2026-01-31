@@ -16,9 +16,14 @@ public interface FamilyMemberDao {
     
     // Operasi ukuran badan
     List<String> getAllClothingTypeNames();
-    List<String> getClothingTypeNamesByGender(String memberGender); // ✅ BARU
+    List<String> getClothingTypeNamesByGender(String memberGender);
     Map<String, String> getBasicBodyMeasurements(int memberId);
     Map<String, String> getMeasurementsByTemplate(int memberId, int clothingTypeId);
     int getClothingTypeIdByName(String name);
     boolean updateMeasurementsByTemplate(int memberId, int clothingTypeId, Map<String, String> measurements);
+    
+    // ✅ OPERASI BARU UNTUK KEWENANGAN TAILOR
+    boolean grantTailorAccess(int familyMemberId, String tailorId);
+    boolean revokeTailorAccess(int familyMemberId);
+    boolean isTailorAuthorized(int familyMemberId, String tailorId);
 }

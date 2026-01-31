@@ -1,4 +1,4 @@
-// com.tailorshop.dao.impl.UserDaoImpl
+// com.tailorshop.DaoImpl.UserDaoImpl.java
 package com.tailorshop.DaoImpl;
 
 import com.tailorshop.dao.UserDao;
@@ -7,6 +7,8 @@ import com.tailorshop.util.DatabaseConnection;
 
 import java.sql.*;
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDaoImpl implements UserDao {
 
@@ -65,7 +67,6 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public boolean save(User user) {
-        // Jana ID jika belum ada
         if (user.getId() == null || user.getId().isEmpty()) {
             user.setId(generateNextId(user.getRole()));
         }
@@ -139,13 +140,11 @@ public class UserDaoImpl implements UserDao {
             if (rs.next()) {
                 String lastId = rs.getString(1);
                 if (lastId != null) {
-                    // Ekstrak nombor urutan (contoh: C0012026 → 001)
-                    String numPart = lastId.substring(1, 4); // ambil 3 digit selepas prefix
+                    String numPart = lastId.substring(1, 4);
                     int nextNum = Integer.parseInt(numPart) + 1;
                     return String.format("%s%03d%s", prefix, nextNum, year);
                 }
             }
-            // ID pertama untuk tahun ini
             return String.format("%s001%s", prefix, year);
         } catch (Exception e) {
             e.printStackTrace();
@@ -167,6 +166,56 @@ public class UserDaoImpl implements UserDao {
             e.printStackTrace();
         }
         return null;
+    }
+
+    // ✅ METHOD BARU: DAPATKAN SEMUA PELANGGAN
+    @Override
+    public List<User> getAllCustomers() {
+        List<User> customers = new ArrayList<>();
+        String sql = "SELECT id, name, email, role, registered_by FROM users WHERE role = 'CUSTOMER' ORDER BY name";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User user = new User(
+                    rs.getString("id"),
+                    rs.getString("name"),
+                    rs.getString("email"),
+                    "", // password tidak diperlukan untuk senarai
+                    rs.getString("role"),
+                    rs.getString("registered_by")
+                );
+                customers.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return customers;
+    }
+
+    // ✅ METHOD BARU: DAPATKAN SEMUA TAILOR
+    @Override
+    public List<User> getAllTailors() {
+        List<User> tailors = new ArrayList<>();
+        String sql = "SELECT id, name, email, role, registered_by FROM users WHERE role = 'TAILOR' ORDER BY name";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User user = new User(
+                    rs.getString("id"),
+                    rs.getString("name"),
+                    rs.getString("email"),
+                    "", // password tidak diperlukan untuk senarai
+                    rs.getString("role"),
+                    rs.getString("registered_by")
+                );
+                tailors.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tailors;
     }
 
     private String getRolePrefix(String role) {

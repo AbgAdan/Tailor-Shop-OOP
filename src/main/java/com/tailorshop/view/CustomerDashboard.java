@@ -13,26 +13,24 @@ public class CustomerDashboard extends JPanel {
     private final Runnable onLogout;
     private final String currentUserId;
     private final String userName;
-    private final String userEmail;
 
-    public CustomerDashboard(Runnable onLogout, String userId, String name, String email) {
+    public CustomerDashboard(Runnable onLogout, String userId, String name) {
         this.onLogout = onLogout;
         this.currentUserId = userId;
         this.userName = name;
-        this.userEmail = email;
         initializeUI();
     }
 
     private void initializeUI() {
         setLayout(new BorderLayout());
-        setBackground(StyleUtil.BG_LIGHT);
+        setBackground(new Color(240, 248, 255)); // Alice Blue
 
         // Header
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(StyleUtil.CUSTOMER_COLOR);
         header.setPreferredSize(new Dimension(0, 70));
 
-        JLabel title = new JLabel("MENU PELANGGAN", JLabel.LEFT);
+        JLabel title = new JLabel("👤 MENU PELANGGAN", JLabel.LEFT);
         title.setFont(StyleUtil.TITLE_FONT);
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
@@ -53,11 +51,10 @@ public class CustomerDashboard extends JPanel {
             "Urus Ahli Keluarga",
             "Urus Profil Ukuran",
             "Buat Pesanan",
-            "Lihat Pesanan Saya",
-            "Profil Saya"
+            "Lihat Pesanan Saya"
         };
 
-        JPanel menuPanel = new JPanel(new GridLayout(3, 2, 20, 20));
+        JPanel menuPanel = new JPanel(new GridLayout(2, 2, 20, 20));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
         menuPanel.setBackground(getBackground());
 
@@ -71,28 +68,18 @@ public class CustomerDashboard extends JPanel {
                 BorderFactory.createLineBorder(Color.DARK_GRAY, 1),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
             ));
-
+            
             if ("Urus Ahli Keluarga".equals(item)) {
-                // ✅ BETUL: Tambah parameter userRole sebagai "CUSTOMER"
                 btn.addActionListener(e -> navigateTo(
-                    new FamilyMemberPanel(
-                        currentUserId, 
-                        userName, 
-                        "CUSTOMER", // ✅ Parameter ke-3: userRole
-                        () -> navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
+                    new FamilyMemberPanel(currentUserId, userName, "CUSTOMER", currentUserId, () -> 
+                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName))
                     )
                 ));
-            } else if ("Profil Saya".equals(item)) {
-                btn.addActionListener(e -> navigateTo(
-                    new ProfailPanel(
-                        currentUserId, 
-                        "CUSTOMER", 
-                        userName, 
-                        userEmail, 
-                        () -> navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
-                    )
-                ));
-            } else {
+            } else if ("Urus Profil Ukuran".equals(item)) {
+                btn.addActionListener(e -> showFeatureNotReady(item));
+            } else if ("Buat Pesanan".equals(item)) {
+                btn.addActionListener(e -> showFeatureNotReady(item));
+            } else if ("Lihat Pesanan Saya".equals(item)) {
                 btn.addActionListener(e -> showFeatureNotReady(item));
             }
 
@@ -128,13 +115,6 @@ public class CustomerDashboard extends JPanel {
             Main.mainFrame.setContentPane(panel);
             Main.mainFrame.revalidate();
             Main.mainFrame.repaint();
-        } else {
-            JOptionPane.showMessageDialog(
-                this,
-                "Tetingkap utama tidak dijumpai.",
-                "Ralat Navigasi",
-                JOptionPane.WARNING_MESSAGE
-            );
         }
     }
 }
