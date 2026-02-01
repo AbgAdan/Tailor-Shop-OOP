@@ -32,7 +32,7 @@ public class TailorDashboard extends JPanel {
         header.setBackground(StyleUtil.TAILOR_COLOR);
         header.setPreferredSize(new Dimension(0, 70));
 
-        JLabel title = new JLabel("👔 MENU TUKANG JAHIT", JLabel.LEFT);
+        JLabel title = new JLabel("👔 MENU TUKANG JAHIT - " + userName, JLabel.LEFT);
         title.setFont(StyleUtil.TITLE_FONT);
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
@@ -51,7 +51,7 @@ public class TailorDashboard extends JPanel {
         // Menu items
         String[] menuItems = {
             "Senarai Pesanan Saya",
-            "Kemaskini Status Pesanan",
+            "Kemaskini Status Pesanan", 
             "Lihat Ukuran Pelanggan",
             "Laporan Harian",
             "Profil Saya"
@@ -79,9 +79,20 @@ public class TailorDashboard extends JPanel {
                     )
                 ));
             } else if ("Lihat Ukuran Pelanggan".equals(item)) {
-                // ✅ AKTIFKAN FUNGSI SEBENAR
                 btn.addActionListener(e -> navigateTo(
                     new TailorCustomerPanel(currentUserId, () -> 
+                        navigateTo(new TailorDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else if ("Senarai Pesanan Saya".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new TailorOrderPanel(currentUserId, () -> 
+                        navigateTo(new TailorDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else if ("Kemaskini Status Pesanan".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new TailorOrderPanel(currentUserId, () -> 
                         navigateTo(new TailorDashboard(onLogout, currentUserId, userName, userEmail))
                     )
                 ));

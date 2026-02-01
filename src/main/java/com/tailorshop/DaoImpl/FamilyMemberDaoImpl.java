@@ -188,7 +188,8 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
                 measurements.put(templateRs.getString("name"), "0");
             }
             
-            String dataSql = "SELECT measurement_data FROM measurements WHERE family_member_id = ? AND clothing_type_id = 0";
+            // ✅ GUNA NULL untuk ukuran asas
+            String dataSql = "SELECT measurement_data FROM measurements WHERE family_member_id = ? AND clothing_type_id IS NULL";
             PreparedStatement dataStmt = conn.prepareStatement(dataSql);
             dataStmt.setInt(1, memberId);
             ResultSet dataRs = dataStmt.executeQuery();
@@ -275,53 +276,84 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
         return -1;
     }
 
+    // ✅ METHOD NULL-SAFE - terima Integer
     @Override
-    public boolean updateMeasurementsByTemplate(int memberId, int clothingTypeId, Map<String, String> measurements) {
-        String checkSql = "SELECT id FROM measurements WHERE family_member_id = ? AND clothing_type_id = ?";
-        int measurementId = -1;
+public boolean updateMeasurementsByTemplate(int memberId, Integer clothingTypeId, Map<String, String> measurements) {
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    try {
+        conn = DatabaseConnection.getConnection();
         
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-            checkStmt.setInt(1, memberId);
-            checkStmt.setInt(2, clothingTypeId);
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next()) {
-                measurementId = rs.getInt("id");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+        // Semak rekod sedia ada
+        String checkSql;
+        if (clothingTypeId == null) {
+            checkSql = "SELECT id FROM measurements WHERE family_member_id = ? AND clothing_type_id IS NULL";
+        } else {
+            checkSql = "SELECT id FROM measurements WHERE family_member_id = ? AND clothing_type_id = ?";
         }
+        
+        stmt = conn.prepareStatement(checkSql);
+        stmt.setInt(1, memberId);
+        if (clothingTypeId != null) {
+            stmt.setInt(2, clothingTypeId);
+        }
+        
+        ResultSet rs = stmt.executeQuery();
+        int measurementId = -1;
+        if (rs.next()) {
+            measurementId = rs.getInt("id");
+        }
+        stmt.close();
 
         String jsonData = mapToJson(measurements);
 
         if (measurementId > 0) {
+            // Update existing
             String updateSql = "UPDATE measurements SET measurement_data = ? WHERE id = ?";
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-                updateStmt.setString(1, jsonData);
-                updateStmt.setInt(2, measurementId);
-                return updateStmt.executeUpdate() > 0;
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return false;
-            }
+            stmt = conn.prepareStatement(updateSql);
+            stmt.setString(1, jsonData);
+            stmt.setInt(2, measurementId);
+            return stmt.executeUpdate() > 0;
         } else {
-            String insertSql = "INSERT INTO measurements (family_member_id, clothing_type_id, measurement_data) VALUES (?, ?, ?)";
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-                insertStmt.setInt(1, memberId);
-                insertStmt.setInt(2, clothingTypeId);
-                insertStmt.setString(3, jsonData);
-                return insertStmt.executeUpdate() > 0;
+            // Insert new
+            if (clothingTypeId == null) {
+                String insertSql = "INSERT INTO measurements (family_member_id, clothing_type_id, measurement_data) VALUES (?, NULL, ?)";
+                stmt = conn.prepareStatement(insertSql);
+                stmt.setInt(1, memberId);
+                stmt.setString(2, jsonData);
+                return stmt.executeUpdate() > 0;
+            } else {
+                String insertSql = "INSERT INTO measurements (family_member_id, clothing_type_id, measurement_data) VALUES (?, ?, ?)";
+                stmt = conn.prepareStatement(insertSql);
+                stmt.setInt(1, memberId);
+                stmt.setInt(2, clothingTypeId);
+                stmt.setString(3, jsonData);
+                return stmt.executeUpdate() > 0;
+            }
+        }
+        
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false; // ✅ TAMBAH INI
+    } finally {
+        if (stmt != null) {
+            try {
+                stmt.close();
             } catch (SQLException e) {
                 e.printStackTrace();
-                return false;
+            }
+        }
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }
     }
+}
 
-    // ✅ METHOD BARU UNTUK KEWENANGAN TAILOR
+    // ✅ OPERASI KEWENANGAN TAILOR
     @Override
     public boolean grantTailorAccess(int familyMemberId, String tailorId) {
         String sql = "UPDATE family_members SET managed_by_tailor = TRUE, tailor_id = ? WHERE id = ?";
@@ -366,7 +398,7 @@ public class FamilyMemberDaoImpl implements FamilyMemberDao {
         return false;
     }
 
-    // ✅ HELPER METHODS UNTUK JSON (MANUAL)
+    // ✅ HELPER JSON
     private Map<String, String> parseJsonToMap(String json) {
         Map<String, String> map = new HashMap<>();
         if (json == null || json.trim().isEmpty() || !json.startsWith("{")) {

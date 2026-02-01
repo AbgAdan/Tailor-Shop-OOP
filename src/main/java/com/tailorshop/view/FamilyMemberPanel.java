@@ -2,19 +2,17 @@
 package com.tailorshop.view;
 
 import com.tailorshop.controller.FamilyMemberController;
-import com.tailorshop.controller.UserController;
 import com.tailorshop.main.Main;
 import com.tailorshop.model.FamilyMember;
-import com.tailorshop.model.User;
 import com.tailorshop.util.StyleUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class FamilyMemberPanel extends JPanel {
 
@@ -22,18 +20,17 @@ public class FamilyMemberPanel extends JPanel {
     private final String customerId;
     private final String mainUserName;
     private final String userRole;
-    private final String currentUserId; // ✅ TAMBAH INI
+    private final String currentUserId;
     private final Runnable onBack;
     private JTable table;
     private DefaultTableModel tableModel;
     private List<FamilyMember> currentMembers;
 
-    // ✅ TAMBAH currentUserId dalam constructor
     public FamilyMemberPanel(String customerId, String mainUserName, String userRole, String currentUserId, Runnable onBack) {
         this.customerId = customerId;
         this.mainUserName = mainUserName;
         this.userRole = userRole;
-        this.currentUserId = currentUserId; // ✅ STORE CURRENT USER ID
+        this.currentUserId = currentUserId;
         this.onBack = onBack;
         initializeUI();
         loadFamilyMembers();
@@ -81,6 +78,7 @@ public class FamilyMemberPanel extends JPanel {
 
         add(buttonPanel, BorderLayout.SOUTH);
 
+        // ✅ KLIK AHLI KELUARGA → NAVIGASI KE MEASUREMENT PANEL
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 if (evt.getClickCount() == 1) {
@@ -88,37 +86,16 @@ public class FamilyMemberPanel extends JPanel {
                     if (row >= 0 && row < currentMembers.size()) {
                         FamilyMember member = currentMembers.get(row);
                         
-                        // ✅ SEMAK KEWENANGAN TAILOR
-                        boolean canEditFamilyInfo = canEditFamilyMemberInfo(member);
-                        
-                        if (canEditFamilyInfo) {
-                            showEditOrDeleteDialog(member); // Boleh edit maklumat
-                        } else {
-                            showViewOnlyMeasurements(member); // View only
-                        }
+                        navigateTo(new MeasurementPanel(
+                            member,
+                            currentUserId,
+                            userRole,
+                            () -> navigateTo(new FamilyMemberPanel(customerId, mainUserName, userRole, currentUserId, onBack))
+                        ));
                     }
                 }
             }
         });
-    }
-
-    // ✅ METHOD BARU: SEMAK KEWENANGAN EDIT
-    private boolean canEditFamilyMemberInfo(FamilyMember member) {
-        if ("CUSTOMER".equalsIgnoreCase(userRole)) {
-            return true; // Customer boleh edit semua
-        }
-        
-        if ("TAILOR".equalsIgnoreCase(userRole)) {
-            // Tailor boleh edit jika dibenarkan
-            return member.isManagedByTailor() && 
-                   currentUserId.equals(member.getTailorId());
-        }
-        
-        if ("BOSS".equalsIgnoreCase(userRole)) {
-            return true; // Boss boleh edit semua
-        }
-        
-        return false;
     }
 
     private void loadFamilyMembers() {
@@ -141,199 +118,7 @@ public class FamilyMemberPanel extends JPanel {
         }
     }
 
-    // ✅ UNTUK CUSTOMER: Pilih jenis pakaian & boleh edit ukuran
-    private void showBodyMeasurements(FamilyMember member) {
-        try {
-            FamilyMemberController controller = new FamilyMemberController();
-            
-            List<String> clothingTypes = controller.getClothingTypeNamesByGender(member.getGender());
-            
-            String[] options;
-            if (clothingTypes.isEmpty()) {
-                options = new String[]{"Ukuran Asas"};
-            } else {
-                options = new String[clothingTypes.size() + 1];
-                options[0] = "Ukuran Asas";
-                for (int i = 0; i < clothingTypes.size(); i++) {
-                    options[i + 1] = clothingTypes.get(i);
-                }
-            }
-            
-            String selected = (String) JOptionPane.showInputDialog(
-                this,
-                "Pilih jenis pakaian untuk lihat ukuran:",
-                "Pilih Jenis Pakaian",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options,
-                options[0]
-            );
-            
-            if (selected == null) return;
-            
-            Map<String, String> measurements;
-            String title;
-            
-            if ("Ukuran Asas".equals(selected)) {
-                measurements = controller.getBasicBodyMeasurements(member.getId());
-                title = "Ukuran Asas - " + member.getName();
-            } else {
-                int clothingTypeId = controller.getClothingTypeIdByName(selected);
-                measurements = controller.getMeasurementsByTemplate(member.getId(), clothingTypeId);
-                title = "Ukuran Badan - " + member.getName() + " (" + selected + ")";
-            }
-            
-            if (measurements.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Tiada ukuran direkodkan.", "Makluman", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            
-            // Susun mengikut urutan standard
-            List<String> standardOrder = Arrays.asList(
-                "Lebar Bahu", "Leher", "Dada", "Pinggang Badan", "Pinggul Badan",
-                "Kepala Lengan", "Hujung Lengan", "Mercu ke Mercu", 
-                "Pinggang Badan ke Pinggul Badan", "Dada ke Mercu", 
-                "Labuh Lengan", "Labuh Baju", "Labuh Tengah Belakang"
-            );
-            
-            // Buat panel 2 lajur
-            JPanel panel = new JPanel(new GridLayout(0, 2, 10, 5));
-            panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            
-            // Papar ukuran standard dulu
-            for (String key : standardOrder) {
-                if (measurements.containsKey(key)) {
-                    JLabel nameLabel = new JLabel(key + ":");
-                    JLabel valueLabel = new JLabel(measurements.get(key));
-                    nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-                    panel.add(nameLabel);
-                    panel.add(valueLabel);
-                }
-            }
-            
-            // Papar ukuran tambahan
-            for (Map.Entry<String, String> entry : measurements.entrySet()) {
-                if (!standardOrder.contains(entry.getKey())) {
-                    JLabel nameLabel = new JLabel(entry.getKey() + ":");
-                    JLabel valueLabel = new JLabel(entry.getValue());
-                    nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-                    panel.add(nameLabel);
-                    panel.add(valueLabel);
-                }
-            }
-            
-            JOptionPane.showMessageDialog(
-                this,
-                panel,
-                title,
-                JOptionPane.INFORMATION_MESSAGE
-            );
-            
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Gagal memuatkan data ukuran.", "Ralat", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-    }
-
-    // ✅ UNTUK TAILOR/BOSS: View-only ukuran
-    private void showViewOnlyMeasurements(FamilyMember member) {
-        try {
-            FamilyMemberController controller = new FamilyMemberController();
-            
-            List<String> clothingTypes = controller.getClothingTypeNamesByGender(member.getGender());
-            
-            String[] options;
-            if (clothingTypes.isEmpty()) {
-                options = new String[]{"Ukuran Asas"};
-            } else {
-                options = new String[clothingTypes.size() + 1];
-                options[0] = "Ukuran Asas";
-                for (int i = 0; i < clothingTypes.size(); i++) {
-                    options[i + 1] = clothingTypes.get(i);
-                }
-            }
-            
-            String selected = (String) JOptionPane.showInputDialog(
-                this,
-                "Pilih jenis pakaian untuk lihat ukuran:",
-                "Pilih Jenis Pakaian",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options,
-                options[0]
-            );
-            
-            if (selected == null) return;
-            
-            Map<String, String> measurements;
-            String title;
-            
-            if ("Ukuran Asas".equals(selected)) {
-                measurements = controller.getBasicBodyMeasurements(member.getId());
-                title = "Ukuran Asas - " + member.getName();
-            } else {
-                int clothingTypeId = controller.getClothingTypeIdByName(selected);
-                measurements = controller.getMeasurementsByTemplate(member.getId(), clothingTypeId);
-                title = "Ukuran Badan - " + member.getName() + " (" + selected + ")";
-            }
-            
-            if (measurements.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Tiada ukuran direkodkan.", "Makluman", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            
-            // Susun mengikut urutan standard
-            List<String> standardOrder = Arrays.asList(
-                "Lebar Bahu", "Leher", "Dada", "Pinggang Badan", "Pinggul Badan",
-                "Kepala Lengan", "Hujung Lengan", "Mercu ke Mercu", 
-                "Pinggang Badan ke Pinggul Badan", "Dada ke Mercu", 
-                "Labuh Lengan", "Labuh Baju", "Labuh Tengah Belakang"
-            );
-            
-            // Buat panel 2 lajur
-            JPanel panel = new JPanel(new GridLayout(0, 2, 10, 5));
-            panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            
-            // Papar ukuran standard dulu
-            for (String key : standardOrder) {
-                if (measurements.containsKey(key)) {
-                    JLabel nameLabel = new JLabel(key + ":");
-                    JLabel valueLabel = new JLabel(measurements.get(key));
-                    nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-                    panel.add(nameLabel);
-                    panel.add(valueLabel);
-                }
-            }
-            
-            // Papar ukuran tambahan
-            for (Map.Entry<String, String> entry : measurements.entrySet()) {
-                if (!standardOrder.contains(entry.getKey())) {
-                    JLabel nameLabel = new JLabel(entry.getKey() + ":");
-                    JLabel valueLabel = new JLabel(entry.getValue());
-                    nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    valueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-                    panel.add(nameLabel);
-                    panel.add(valueLabel);
-                }
-            }
-            
-            JOptionPane.showMessageDialog(
-                this,
-                panel,
-                title,
-                JOptionPane.INFORMATION_MESSAGE
-            );
-            
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Gagal memuatkan data ukuran.", "Ralat", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-    }
-
-    // ✅ TAMBAH BUTANG "BENARKAN TAILOR AKSES" UNTUK CUSTOMER
+    // ✅ PAPAR DIALOG EDIT DENGAN JADUAL
     private void showEditSelection() {
         if (!"CUSTOMER".equalsIgnoreCase(userRole)) return;
         
@@ -342,6 +127,7 @@ public class FamilyMemberPanel extends JPanel {
             return;
         }
 
+        // Filter ahli keluarga yang boleh diedit (bukan main user)
         java.util.List<FamilyMember> editableMembers = currentMembers.stream()
             .filter(m -> !m.isMainUser())
             .toList();
@@ -351,42 +137,142 @@ public class FamilyMemberPanel extends JPanel {
             return;
         }
 
-        String[] options = editableMembers.stream()
-            .map(FamilyMember::getName)
-            .toArray(String[]::new);
+        // ✅ PAPAR DIALOG DENGAN JADUAL EDIT
+        showEditTableDialog(editableMembers);
+    }
 
-        String selectedName = (String) JOptionPane.showInputDialog(
-            this,
-            "Pilih ahli keluarga untuk edit atau padam:",
-            "Pilih Ahli Keluarga",
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]
-        );
+    // ✅ METHOD BARU: PAPAR JADUAL EDIT DALAM DIALOG
+    private void showEditTableDialog(java.util.List<FamilyMember> editableMembers) {
+        JDialog dialog = new JDialog((Frame) null, "Edit Ahli Keluarga", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setBackground(StyleUtil.BG_LIGHT);
+        dialog.setPreferredSize(new Dimension(600, 400));
 
-        if (selectedName != null) {
-            FamilyMember selected = editableMembers.stream()
-                .filter(m -> m.getName().equals(selectedName))
-                .findFirst()
-                .orElse(null);
-            
-            if (selected != null) {
-                showEditOrDeleteDialog(selected);
+        // Header
+        JLabel header = new JLabel("SENARAI AHLI KELUARGA", JLabel.CENTER);
+        header.setFont(StyleUtil.TITLE_FONT);
+        header.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
+        dialog.add(header, BorderLayout.NORTH);
+
+        // Jadual dengan lajur Tindakan
+        String[] columns = {"Nama", "Umur", "Jantina", "Tindakan"};
+        DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 3; // Hanya lajur tindakan boleh edit
             }
+        };
+
+        JTable table = new JTable(tableModel);
+        table.setFillsViewportHeight(true);
+
+        // Isi data
+        for (FamilyMember member : editableMembers) {
+            Object[] row = {
+                member.getName(),
+                member.getAge() > 0 ? String.valueOf(member.getAge()) : "N/A",
+                member.getGender(),
+                "Edit"
+            };
+            tableModel.addRow(row);
+        }
+
+        // Custom renderer dan editor untuk butang
+        table.getColumn("Tindakan").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Tindakan").setCellEditor(new ButtonEditor(new JCheckBox(), editableMembers, this));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        // Butang tutup
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton closeBtn = new JButton("Tutup");
+        closeBtn.addActionListener(e -> dialog.dispose());
+        buttonPanel.add(closeBtn);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    // ✅ CUSTOM CELL RENDERER
+    private class ButtonRenderer extends JButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(true);
+            setBackground(StyleUtil.CUSTOMER_COLOR);
+            setForeground(Color.WHITE);
+            setFont(StyleUtil.BUTTON_FONT);
+        }
+        
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? "" : value.toString());
+            return this;
+        }
+    }
+
+    // ✅ CUSTOM CELL EDITOR
+    private class ButtonEditor extends DefaultCellEditor {
+        protected JButton button;
+        private String label;
+        private boolean isPushed;
+        private FamilyMemberPanel panel;
+        private java.util.List<FamilyMember> members;
+
+        public ButtonEditor(JCheckBox checkBox, java.util.List<FamilyMember> members, FamilyMemberPanel panel) {
+            super(checkBox);
+            this.members = members;
+            this.panel = panel;
+            button = new JButton();
+            button.setOpaque(true);
+            button.setBackground(StyleUtil.CUSTOMER_COLOR);
+            button.setForeground(Color.WHITE);
+            button.setFont(StyleUtil.BUTTON_FONT);
+            button.addActionListener(e -> {
+                if (isPushed) {
+                    // Dapatkan ahli keluarga untuk baris ini
+                    int viewRow = table.getEditingRow();
+                    int modelRow = table.convertRowIndexToModel(viewRow);
+                    FamilyMember selectedMember = members.get(modelRow);
+                    panel.showEditOrDeleteDialog(selectedMember);
+                }
+                fireEditingStopped();
+            });
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int row, int column) {
+            label = (value == null) ? "" : value.toString();
+            button.setText(label);
+            isPushed = true;
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            isPushed = false;
+            return label;
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            isPushed = false;
+            return super.stopCellEditing();
+        }
+
+        @Override
+        protected void fireEditingStopped() {
+            super.fireEditingStopped();
         }
     }
 
     private void showEditOrDeleteDialog(FamilyMember member) {
-        if (!canEditFamilyMemberInfo(member)) return;
+        if (!"CUSTOMER".equalsIgnoreCase(userRole)) return;
         
-        String[] options;
-        if ("CUSTOMER".equalsIgnoreCase(userRole)) {
-            options = new String[]{"Edit", "Padam", "Benarkan Tailor Akses", "Batal"};
-        } else {
-            options = new String[]{"Edit", "Batal"}; // Untuk Tailor/Boss yang dibenarkan
-        }
-
+        String[] options = {"Edit", "Padam", "Batal"};
         int choice = JOptionPane.showOptionDialog(
             this,
             "Tindakan untuk: " + member.getName(),
@@ -401,58 +287,7 @@ public class FamilyMemberPanel extends JPanel {
         if (choice == 0) {
             editFamilyMember(member);
         } else if (choice == 1) {
-            if ("CUSTOMER".equalsIgnoreCase(userRole)) {
-                confirmDelete(member);
-            }
-        } else if (choice == 2 && "CUSTOMER".equalsIgnoreCase(userRole)) {
-            grantTailorAccess(member);
-        }
-    }
-
-    // ✅ METHOD BARU: BENARKAN TAILOR AKSES
-    private void grantTailorAccess(FamilyMember member) {
-        try {
-            UserController userController = new UserController();
-            List<User> tailors = userController.getAllTailors();
-            
-            if (tailors.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Tiada tailor tersedia.", "Makluman", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            
-            String[] tailorNames = tailors.stream()
-                .map(User::getName)
-                .toArray(String[]::new);
-            
-            String selectedName = (String) JOptionPane.showInputDialog(
-                this,
-                "Pilih Tailor untuk benarkan akses:",
-                "Benarkan Akses Tailor",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                tailorNames,
-                tailorNames[0]
-            );
-            
-            if (selectedName != null) {
-                User selectedTailor = tailors.stream()
-                    .filter(t -> t.getName().equals(selectedName))
-                    .findFirst()
-                    .orElse(null);
-                
-                if (selectedTailor != null) {
-                    FamilyMemberController controller = new FamilyMemberController();
-                    if (controller.grantTailorAccess(member.getId(), selectedTailor.getId())) {
-                        JOptionPane.showMessageDialog(this, "Akses berjaya diberikan kepada " + selectedName + "!", "Berjaya", JOptionPane.INFORMATION_MESSAGE);
-                        loadFamilyMembers(); // Refresh
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Gagal memberikan akses.", "Ralat", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Gagal memuatkan senarai tailor.", "Ralat", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            confirmDelete(member);
         }
     }
 
@@ -522,7 +357,7 @@ public class FamilyMemberPanel extends JPanel {
     }
 
     private void editFamilyMember(FamilyMember member) {
-        if (!canEditFamilyMemberInfo(member)) return;
+        if (!"CUSTOMER".equalsIgnoreCase(userRole)) return;
         
         JTextField nameField = new JTextField(member.getName(), 20);
         JComboBox<String> genderCombo = new JComboBox<>(new String[]{"Lelaki", "Perempuan"});

@@ -20,7 +20,7 @@ public interface FamilyMemberDao {
     Map<String, String> getBasicBodyMeasurements(int memberId);
     Map<String, String> getMeasurementsByTemplate(int memberId, int clothingTypeId);
     int getClothingTypeIdByName(String name);
-    boolean updateMeasurementsByTemplate(int memberId, int clothingTypeId, Map<String, String> measurements);
+    boolean updateMeasurementsByTemplate(int memberId, Integer clothingTypeId, Map<String, String> measurements);
     
     // ✅ OPERASI BARU UNTUK KEWENANGAN TAILOR
     boolean grantTailorAccess(int familyMemberId, String tailorId);

@@ -28,12 +28,12 @@ public class BossDashboard extends JPanel {
         setLayout(new BorderLayout());
         setBackground(StyleUtil.BG_LIGHT);
 
-        // Header
+        // Header - Tambah nama boss dalam tajuk
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(StyleUtil.BOSS_COLOR);
         header.setPreferredSize(new Dimension(0, 70));
 
-        JLabel title = new JLabel("👑 MENU PENGURUS", JLabel.LEFT);
+        JLabel title = new JLabel("👑 MENU PENGURUS - " + userName, JLabel.LEFT); // ✅ NAMA BOSS
         title.setFont(StyleUtil.TITLE_FONT);
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
@@ -49,12 +49,12 @@ public class BossDashboard extends JPanel {
 
         add(header, BorderLayout.NORTH);
 
-        // Menu items
+        // Menu items - Versi lengkap
         String[] menuItems = {
             "Pengurusan Staff",
             "Pantau Semua Pesanan",
-            "Laporan Bulanan",
-            "Analisis Pekerja",
+            "Laporan Bulanan",        // ✅ AKTIFKAN INI
+            "Analisis Pekerja",       // ✅ AKTIFKAN INI
             "Pengurusan Jenis Pakaian",
             "Profil Saya"
         };
@@ -93,7 +93,25 @@ public class BossDashboard extends JPanel {
                         currentUserId 
                     )
                 ));
-            }else {
+            } else if ("Pantau Semua Pesanan".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new BossOrderPanel(currentUserId, () -> 
+                        navigateTo(new BossDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else if ("Laporan Bulanan".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new ReportPanel(() -> 
+                        navigateTo(new BossDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else if ("Analisis Pekerja".equals(item)) {
+                btn.addActionListener(e -> navigateTo(
+                    new ReportPanel(() -> 
+                        navigateTo(new BossDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
+            } else {
                 btn.addActionListener(e -> showFeatureNotReady(item));
             }
 

@@ -13,11 +13,13 @@ public class CustomerDashboard extends JPanel {
     private final Runnable onLogout;
     private final String currentUserId;
     private final String userName;
+    private final String userEmail;
 
-    public CustomerDashboard(Runnable onLogout, String userId, String name) {
+    public CustomerDashboard(Runnable onLogout, String userId, String name, String email) {
         this.onLogout = onLogout;
         this.currentUserId = userId;
         this.userName = name;
+        this.userEmail = email;
         initializeUI();
     }
 
@@ -30,7 +32,7 @@ public class CustomerDashboard extends JPanel {
         header.setBackground(StyleUtil.CUSTOMER_COLOR);
         header.setPreferredSize(new Dimension(0, 70));
 
-        JLabel title = new JLabel("👤 MENU PELANGGAN", JLabel.LEFT);
+        JLabel title = new JLabel("👤 MENU PELANGGAN - " + userName, JLabel.LEFT);
         title.setFont(StyleUtil.TITLE_FONT);
         title.setForeground(Color.WHITE);
         title.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
@@ -72,15 +74,23 @@ public class CustomerDashboard extends JPanel {
             if ("Urus Ahli Keluarga".equals(item)) {
                 btn.addActionListener(e -> navigateTo(
                     new FamilyMemberPanel(currentUserId, userName, "CUSTOMER", currentUserId, () -> 
-                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName))
+                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
                     )
                 ));
             } else if ("Urus Profil Ukuran".equals(item)) {
                 btn.addActionListener(e -> showFeatureNotReady(item));
             } else if ("Buat Pesanan".equals(item)) {
-                btn.addActionListener(e -> showFeatureNotReady(item));
+                btn.addActionListener(e -> navigateTo(
+                    new CreateOrderPanel(currentUserId, () -> 
+                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
             } else if ("Lihat Pesanan Saya".equals(item)) {
-                btn.addActionListener(e -> showFeatureNotReady(item));
+                btn.addActionListener(e -> navigateTo(
+                    new CustomerOrderPanel(currentUserId, () -> 
+                        navigateTo(new CustomerDashboard(onLogout, currentUserId, userName, userEmail))
+                    )
+                ));
             }
 
             menuPanel.add(btn);

@@ -43,7 +43,6 @@ public class FamilyMemberController {
         return dao.getAllClothingTypeNames();
     }
 
-    // ✅ DAPATKAN JENIS PAKAIAN MENGIKUT JANTINA AHLI KELUARGA
     public List<String> getClothingTypeNamesByGender(String memberGender) {
         return dao.getClothingTypeNamesByGender(memberGender);
     }
@@ -60,11 +59,12 @@ public class FamilyMemberController {
         return dao.getClothingTypeIdByName(name);
     }
 
-    public boolean updateMeasurementsByTemplate(int memberId, int clothingTypeId, Map<String, String> measurements) {
+    // ✅ METHOD YANG NULL-SAFE - terima Integer
+    public boolean updateMeasurementsByTemplate(int memberId, Integer clothingTypeId, Map<String, String> measurements) {
         return dao.updateMeasurementsByTemplate(memberId, clothingTypeId, measurements);
     }
 
-    // ✅ METHOD BARU: KEWENANGAN TAILOR
+    // ✅ OPERASI BARU UNTUK KEWENANGAN TAILOR
     public boolean grantTailorAccess(int familyMemberId, String tailorId) {
         return dao.grantTailorAccess(familyMemberId, tailorId);
     }
